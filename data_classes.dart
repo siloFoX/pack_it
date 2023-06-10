@@ -3,60 +3,122 @@ void main() {
   print("It works");
 }
 
-class StuffWithCheckPair {
+class StuffWithCheckPair implements Comparable<StuffWithCheckPair> {
   String stuff;
   Map<String, bool> isCheckedStuffBySet = {};
   
   StuffWithCheckPair({
     required this.stuff,
-  });
+    List<String>? listOfSet,
+  }) {
+    if (listOfSet != null) 
+      for (String eachSet in listOfSet) {
+        isCheckedStuffBySet[eachSet] = false;
+      }
+  }
   
-  void checkBySet (String setName) {
+  void checkBySet(String setName) {
     isCheckedStuffBySet[setName] = true;
   }
   
-  void uncheckBySet (String setName) {
+  void uncheckBySet(String setName) {
     isCheckedStuffBySet[setName] = false;
   }
   
-  void newSetStuffSetting (String setName) {
-    
+  void newSet(String setName) {
+    uncheckBySet(setName);
+  }
+
+  void deleteSet(String setName) {
+    isCheckedStuffBySet.remove(setName);
+  }
+
+  void printStuff() {
+    print(stuff);
+  }
+
+  @override
+  int compareTo(StuffWithCheckPair other) {
+    return stuff.compareTo(other.stuff);
   }
   
-  // TODO : 비교연산자 만들어야 함
+  int compareToWithSetName(StuffWithCheckPair other, String setName) {
+    if (isCheckedStuffBySet[setName] == other.isCheckedStuffBySet[setName]) 
+      return compareTo(other);
+    else 
+      return isCheckedStuffBySet[setName]! ? -1 : 1;
+  }
 }
 
-class Category {
+class Category implements Comparable<Category> {
   String categoryName;
   List<StuffWithCheckPair> listOfPair = [];
   Map<String, bool> isCheckedCategoryBySet = {};
   
   Category({
     required this.categoryName,
-  });
+    List<String>? listOfSet,
+  }) {
+    if (listOfSet != null) 
+      for (String eachSet in listOfSet) {
+        isCheckedCategoryBySet[eachSet] = false;
+      }
+  }
   
-  void checkBySet (String setName) {
+  void checkBySet(String setName) {
     isCheckedCategoryBySet[setName] = true;
   }
   
-  void uncheckBySet (String setName) {
+  void uncheckBySet(String setName) {
     isCheckedCategoryBySet[setName] = false;
   }
   
-  void newSetCategorySetting (String setName) {
-    
+  void newSetCategorySetting(List<String> listOfSet) {
+    for (String eachSet in listOfSet) {
+      isCheckedCategoryBySet[eachSet] = false;
+    }
+  }
+
+  void setNewStuff(String stuffName, List<String> listOfSet) {
+    StuffWithCheckPair newStuff = StuffWithCheckPair(stuff : stuffName, listOfSet : listOfSet);
+    listOfPair.insert(0, newStuff);
+    sortListOfPairByListOfSet(listOfSet);
+  }
+
+  void sortListOfPairByListOfSet(List<String> listOfSet) {
+    for (String eachSet in listOfSet) {
+      sortListOfPair(eachSet);
+    }
   }
   
-  void sortListOfPair () {
-    
+  void sortListOfPair(String setName) {
+    listOfPair.sort((a, b) => a.compareToWithSetName(b, setName));
   }
-  
-  // TODO : 비교연산자 만들어야 함
+
+  @override
+  int compareTo(Category other) {
+    return categoryName.compareTo(other.categoryName);
+  }
+
+  int compareToWithSetName(Category other, String setName) {
+    if (isCheckedCategoryBySet[setName] == other.isCheckedCategoryBySet[setName])
+      return compareTo(other);
+    else
+      return isCheckedCategoryBySet[setName]! ? -1 : 1;
+  }
 }
 
 class ListOfCategoryWrapper {
-  static void sortListOfCategory(List<Category> listOfCategory) {
-    // 리스트를 정렬하는 작업 수행
+  static void changeSet(List<Category> listOfCategory, String setName) {
+    listOfCategory.sort((a, b) => a.compareToWithSetName(b, setName));
+    sortEachCategories(listOfCategory, setName);
+    
+  }
+
+  static void sortEachCategories(List<Category> listOfCategory, String setName) {
+    for (Category eachCategory in listOfCategory) {
+      eachCategory.sortListOfPair(setName);
+    }
   }
 }
 
@@ -87,9 +149,7 @@ class SetDataHandler {
       }
     }
     
-    // TODO : sort listOfCategory
-    
-    // Make '회사' category's stuff
+    // // Make '회사' category's stuff
     listOfCategory[0].listOfPair = [
       StuffWithCheckPair(stuff : "워치 충전하기"),
       StuffWithCheckPair(stuff : "휴대폰 충전하기"),
@@ -114,14 +174,10 @@ class SetDataHandler {
     listOfCategory[0].listOfPair[companyListOfStuffLength - 2].uncheckBySet("회사");
     listOfCategory[0].listOfPair[companyListOfStuffLength - 1].uncheckBySet("회사");    
     
-    // TODO : sort listOfPair
-    
-    for (int stuffIdx = 0; stuffIdx < companyListOfStuffLength; stuffIdx++) {
-      print(listOfCategory[0].listOfPair[stuffIdx].stuff);
-    }
+    initiativeSort();
   }
   
-  void sortListOfCategory () {
-    ListOfCategoryWrapper.sortListOfCategory(listOfCategory);
+  void initiativeSort() {
+    ListOfCategoryWrapper.changeSet(listOfCategory, listOfSet[0]);
   }
 }
