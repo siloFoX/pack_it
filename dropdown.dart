@@ -51,13 +51,15 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
   //   DropdownItemModel(value: '숙박', items: ['Item 7', 'Item 8', 'Item 9']),
   //   // Add additional dropdown items here.
   // ];
-  DataHandler dataHandler = DataHandler();
-  String selectedSet = dataHandler.listOfSet[0];
+  late DataHandler dataHandler;
+  late String selectedSet;
   
   // initState 부분은 DB 에서 가져올 부분을 위해 내버려둠
   @override
   void initState () {
     // _selectedDropdownItems.add(_dropdownItems.first);
+    dataHandler = DataHandler();
+    selectedSet = dataHandler.listOfSet[0];
     super.initState();
   }
 
@@ -70,15 +72,15 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
       ),
       child: Column(
         children: dataHandler.listOfCategory.map((eachCategory) {
-          bool isSelected = eachCategory.isCheckedCategoryBySet[selectedSet];
+          bool isSelected = eachCategory.isCheckedCategoryBySet[selectedSet]!;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               GestureDetector(
-                onTap: () => toggleDropdownItem(eachCategory), // 여기부터 수정해야함
+                onTap: () => toggleDropdownItem(eachCategory),
                 child: Container(
                   height: 28,
-                  margin: dropdownItem != _dropdownItems.first ? const EdgeInsets.only(top: 12) : null,
+                  margin: eachCategory != dataHandler.listOfCategory.first ? const EdgeInsets.only(top: 12) : null,
                   decoration: BoxDecoration(
                     border: Border.all(
                       color : Colors.black,
@@ -86,8 +88,9 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
                     ),
                   ),
                   child: CustomListTile(
-                    title: dropdownItem.value,
-                    isChecked: isSelected,
+                    pair : null,
+                    category : eachCategory.categoryName,
+                    fontSize : null,
                   ),
                 ),
               ),
@@ -112,21 +115,20 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
                   child: ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: dropdownItem.items.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final item = dropdownItem.items[index];
+                    itemCount: eachCategory.listOfPair.length,
+                    itemBuilder: (BuildContext context, int idx) {
+                      final pair = eachCategory.listOfPair[idx];
                       return Column(
                         children: [
                           Container(
                             height: 19,
                             padding: const EdgeInsets.only(left : 15),
                             child : CustomListTile(
-                              title : item,
-                              isChecked : false,
+                              pair : pair,
                               fontSize : 8,
                             ),
                           ),
-                          if (index != dropdownItem.items.length - 1)
+                          if (idx != eachCategory.listOfPair.length - 1)
                             const Divider(
                               height: 1,
                               color: Colors.black,
@@ -144,41 +146,14 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
     );
   }
 
-  void toggleDropdownItem(DropdownItemModel dropdownItem) {
+  void toggleDropdownItem(Category category) {
     setState(() {
-      if (_selectedDropdownItems.contains(dropdownItem)) {
-        _selectedDropdownItems.remove(dropdownItem);
-      } else {
-        _selectedDropdownItems.add(dropdownItem);
-      }
+      category.isCheckedCategoryBySet[selectedSet] = !category.isCheckedCategoryBySet[selectedSet]!;
     });
   }
-}
 
-class DropdownItemModel {
-  String value;
-  List<String> items;
-
-  DropdownItemModel({
-    required this.value,
-    required this.items,
-  });
-}
-
-class CustomListTile extends StatelessWidget {
-  final String title;
-  final bool isChecked;
-  final double? fontSize;
-
-  const CustomListTile({
-    required this.title,
-    required this.isChecked,
-    this.fontSize,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget CustomListTile(StuffWithCheckPair? pair, Category? category, double? fontSize) {
+    final bool isChecked = pair != null ? pair.isCheckedStuffBySet[selectedSet]! : category!.isCheckedCategoryBySet[selectedSet]!;
     return Container(
       alignment: Alignment.centerLeft,
       child: Row(
@@ -191,10 +166,10 @@ class CustomListTile extends StatelessWidget {
           ),
           const SizedBox(width : 6),
           Text(
-            title,
+            pair != null ? pair.stuff : category!.categoryName,
             style: TextStyle(
               color : isChecked ? Colors.black : Colors.grey,
-              fontSize : this.fontSize ?? 10,
+              fontSize : fontSize ?? 10,
               fontWeight : FontWeight.w500,
             ),
           ),
@@ -204,16 +179,15 @@ class CustomListTile extends StatelessWidget {
   }
 }
 
-// void main() {
-//   SetDataHandler setDataHandler = SetDataHandler();
-//   List<String> listOfSet = setDataHandler.listOfSet;
-//   String thisSetName = listOfSet[0];
-//   String thisCategoryName = setDataHandler.listOfCategory[0].categoryName;
-//   String thisStuffName = setDataHandler.listOfCategory[0].listOfPair[0].stuff;
-//   // setDataHandler.pressOtherSet(thisSetName);
-//   setDataHandler.pressStuff(thisCategoryName, thisStuffName, thisSetName);
-//   setDataHandler.pressOtherSet(thisSetName);
-// }
+class DropdownItemModel {
+  String value;
+  List<String> items;
+
+  DropdownItemModel({
+    required this.value,
+    required this.items,
+  });
+}
 
 class StuffWithCheckPair implements Comparable<StuffWithCheckPair> {
   String stuff;
@@ -276,14 +250,14 @@ class Category implements Comparable<Category> {
   void checkBySet(String setName) {
     isCheckedCategoryBySet[setName] = true;
     for (StuffWithCheckPair pair in listOfPair) {
-      pair.isCheckedCategoryBySet[setName] = true;
+      pair.isCheckedStuffBySet[setName] = true;
     }
   }
   
   void uncheckBySet(String setName) {
     isCheckedCategoryBySet[setName] = false;
     for (StuffWithCheckPair pair in listOfPair) {
-      pair.isCheckedCategoryBySet[setName] = false;
+      pair.isCheckedStuffBySet[setName] = false;
     }
   }
   
@@ -410,14 +384,14 @@ class DataHandler {
     Category category = listOfCategory.firstWhere((eachCategory) => eachCategory.categoryName == categoryName);
     StuffWithCheckPair pair = category.listOfPair.firstWhere((eachPair) => eachPair.stuff == stuffName);
 
-    pair.isCheckedStuffBySet[setName] = pair.isCheckedStuffBySet[setName]! ? false : true;
+    pair.isCheckedStuffBySet[setName] = !pair.isCheckedStuffBySet[setName]!;
     ListOfCategoryWrapper.sortEachCategories(listOfCategory, setName);
   }
 
   void pressCategory(String categoryName, String setName) {
     Category category = listOfCategory.firstWhere((eachCategory) => eachCategory.categoryName == categoryName);
     
-    category.isCheckedCategoryBySet[setName] ? category.uncheckBySet[setName] : category.checkBySet[setName];
+    category.isCheckedCategoryBySet[setName] = !category.isCheckedCategoryBySet[setName]!;
     ListOfCategoryWrapper.sortEachCategories(listOfCategory, setName);
   }
 
