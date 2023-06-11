@@ -1,6 +1,12 @@
 void main() {
   SetDataHandler setDataHandler = SetDataHandler();
-  print("It works");
+  List<String> listOfSet = setDataHandler.listOfSet;
+  String thisSetName = listOfSet[0];
+  String thisCategoryName = setDataHandler.listOfCategory[0].categoryName;
+  String thisStuffName = setDataHandler.listOfCategory[0].listOfPair[0].stuff;
+  // setDataHandler.pressOtherSet(thisSetName);
+  setDataHandler.pressStuff(thisCategoryName, thisStuffName, thisSetName);
+  setDataHandler.pressOtherSet(thisSetName);
 }
 
 class StuffWithCheckPair implements Comparable<StuffWithCheckPair> {
@@ -33,10 +39,6 @@ class StuffWithCheckPair implements Comparable<StuffWithCheckPair> {
     isCheckedStuffBySet.remove(setName);
   }
 
-  void printStuff() {
-    print(stuff);
-  }
-
   @override
   int compareTo(StuffWithCheckPair other) {
     return stuff.compareTo(other.stuff);
@@ -67,10 +69,16 @@ class Category implements Comparable<Category> {
   
   void checkBySet(String setName) {
     isCheckedCategoryBySet[setName] = true;
+    for (StuffWithCheckPair pair in listOfPair) {
+      pair.isCheckedCategoryBySet[setName] = true;
+    }
   }
   
   void uncheckBySet(String setName) {
     isCheckedCategoryBySet[setName] = false;
+    for (StuffWithCheckPair pair in listOfPair) {
+      pair.isCheckedCategoryBySet[setName] = false;
+    }
   }
   
   void newSetCategorySetting(List<String> listOfSet) {
@@ -112,7 +120,6 @@ class ListOfCategoryWrapper {
   static void changeSet(List<Category> listOfCategory, String setName) {
     listOfCategory.sort((a, b) => a.compareToWithSetName(b, setName));
     sortEachCategories(listOfCategory, setName);
-    
   }
 
   static void sortEachCategories(List<Category> listOfCategory, String setName) {
@@ -178,6 +185,38 @@ class SetDataHandler {
   }
   
   void initiativeSort() {
-    ListOfCategoryWrapper.changeSet(listOfCategory, listOfSet[0]);
+    pressOtherSet(listOfSet[0]);
   }
+
+  void pressOtherSet(String setName) {
+    ListOfCategoryWrapper.changeSet(listOfCategory, setName);
+    for (Category eachCategory in listOfCategory) {
+      print(eachCategory.categoryName);
+      for (StuffWithCheckPair pair in eachCategory.listOfPair) {
+        print(pair.stuff + " : " + pair.isCheckedStuffBySet[setName].toString());
+      }
+      print("---");
+    }
+  }
+
+  // check 또는 uncheck
+  void pressStuff(String categoryName, String stuffName, String setName) {
+    Category category = listOfCategory.firstWhere((eachCategory) => eachCategory.categoryName == categoryName);
+    StuffWithCheckPair pair = category.listOfPair.firstWhere((eachPair) => eachPair.stuff == stuffName);
+
+    pair.isCheckedStuffBySet[setName] = pair.isCheckedStuffBySet[setName]! ? false : true;
+    ListOfCategoryWrapper.sortEachCategories(listOfCategory, setName);
+  }
+
+  void pressCategory(String categoryName, String setName) {
+    Category category = listOfCategory.firstWhere((eachCategory) => eachCategory.categoryName == categoryName);
+    
+    category.isCheckedCategoryBySet[setName] ? category.uncheckBySet[setName] : category.checkBySet[setName];
+    ListOfCategoryWrapper.sortEachCategories(listOfCategory, setName);
+  }
+
+  // void newCategory(String categoryName, String setName)
+  // void deleteCategory(String categoryName)
+  // void newStuff(String categoryName, String stuffName, String setName)
+  // void deleteStuff(String categoryName, String stuffName)
 }
