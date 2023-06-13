@@ -43,21 +43,12 @@ class ScrollableDropdown extends StatefulWidget {
 }
 
 class _ScrollableDropdownState extends State<ScrollableDropdown> {
-  // 여기를 대체해서 handler 가 들어감
-  // List<DropdownItemModel> _selectedDropdownItems = [];
-  // List<DropdownItemModel> _dropdownItems = [
-  //   DropdownItemModel(value: '외출(기본)', items: ['워치 충전하기', '휴대폰 충전하기', '인공눈물', '락토프리 약', '에어팟', '애플 워치', '틴프 파우치', '휴대폰']),
-  //   DropdownItemModel(value: '운동', items: ['Item 4', 'Item 5', 'Item 6']),
-  //   DropdownItemModel(value: '숙박', items: ['Item 7', 'Item 8', 'Item 9']),
-  //   // Add additional dropdown items here.
-  // ];
   late DataHandler dataHandler;
   late String selectedSet;
   
   // initState 부분은 DB 에서 가져올 부분을 위해 내버려둠
   @override
   void initState () {
-    // _selectedDropdownItems.add(_dropdownItems.first);
     dataHandler = DataHandler();
     selectedSet = dataHandler.listOfSet[0];
     super.initState();
@@ -77,7 +68,7 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               GestureDetector(
-                onTap: () => toggleDropdownItem(eachCategory),
+                onTap: () => tapCategory(eachCategory),
                 child: Container(
                   height: 28,
                   margin: eachCategory != dataHandler.listOfCategory.first ? const EdgeInsets.only(top: 12) : null,
@@ -88,9 +79,7 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
                     ),
                   ),
                   child: CustomListTile(
-                    pair : null,
-                    category : eachCategory.categoryName,
-                    fontSize : null,
+                    category : eachCategory,
                   ),
                 ),
               ),
@@ -120,12 +109,15 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
                       final pair = eachCategory.listOfPair[idx];
                       return Column(
                         children: [
-                          Container(
-                            height: 19,
-                            padding: const EdgeInsets.only(left : 15),
-                            child : CustomListTile(
-                              pair : pair,
-                              fontSize : 8,
+                          GestureDetector(
+                            onTap : () => tapStuff(pair),
+                            child : Container(
+                              height: 19,
+                              padding: const EdgeInsets.only(left : 15),
+                              child : CustomListTile(
+                                pair : pair,
+                                fontSize : 8,
+                              ),
                             ),
                           ),
                           if (idx != eachCategory.listOfPair.length - 1)
@@ -146,13 +138,19 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
     );
   }
 
-  void toggleDropdownItem(Category category) {
+  void tapCategory(Category category) {
     setState(() {
-      category.isCheckedCategoryBySet[selectedSet] = !category.isCheckedCategoryBySet[selectedSet]!;
+      dataHandler.pressCategory(category, selectedSet);
     });
   }
 
-  Widget CustomListTile(StuffWithCheckPair? pair, Category? category, double? fontSize) {
+  void tapStuff(StuffWithCheckPair pair) {
+    setState(() {
+      dataHandler.pressStuff(pair, selectedSet);
+    });
+  }
+
+  Widget CustomListTile({StuffWithCheckPair? pair, Category? category, double? fontSize}) {
     final bool isChecked = pair != null ? pair.isCheckedStuffBySet[selectedSet]! : category!.isCheckedCategoryBySet[selectedSet]!;
     return Container(
       alignment: Alignment.centerLeft,
@@ -179,16 +177,6 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
   }
 }
 
-class DropdownItemModel {
-  String value;
-  List<String> items;
-
-  DropdownItemModel({
-    required this.value,
-    required this.items,
-  });
-}
-
 class StuffWithCheckPair implements Comparable<StuffWithCheckPair> {
   String stuff;
   Map<String, bool> isCheckedStuffBySet = {};
@@ -209,6 +197,10 @@ class StuffWithCheckPair implements Comparable<StuffWithCheckPair> {
   
   void uncheckBySet(String setName) {
     isCheckedStuffBySet[setName] = false;
+  }
+
+  void toggleBySet(String setName) {
+    isCheckedStuffBySet[setName] = !isCheckedStuffBySet[setName]!;
   }
   
   void newSet(String setName) {
@@ -250,15 +242,19 @@ class Category implements Comparable<Category> {
   void checkBySet(String setName) {
     isCheckedCategoryBySet[setName] = true;
     for (StuffWithCheckPair pair in listOfPair) {
-      pair.isCheckedStuffBySet[setName] = true;
+      pair.checkBySet(setName);
     }
   }
   
   void uncheckBySet(String setName) {
     isCheckedCategoryBySet[setName] = false;
     for (StuffWithCheckPair pair in listOfPair) {
-      pair.isCheckedStuffBySet[setName] = false;
+      pair.uncheckBySet(setName);
     }
+  }
+
+  void toggleBySet(String setName) {
+    isCheckedCategoryBySet[setName]! ? uncheckBySet(setName) : checkBySet(setName);
   }
   
   void newSetCategorySetting(List<String> listOfSet) {
@@ -347,6 +343,16 @@ class DataHandler {
       StuffWithCheckPair(stuff : "틴트 파우치"),
       StuffWithCheckPair(stuff : "휴대폰"),
     ];
+    listOfCategory[1].listOfPair = [
+      StuffWithCheckPair(stuff : "물"),
+      StuffWithCheckPair(stuff : "이어폰"),
+    ];
+    listOfCategory[2].listOfPair = [
+      StuffWithCheckPair(stuff : "집들이 선물"),
+      StuffWithCheckPair(stuff : "치약"),
+      StuffWithCheckPair(stuff : "칫솔"),
+      StuffWithCheckPair(stuff : "충전기"),
+    ];
 
     final int companyListOfStuffLength = listOfCategory[0].listOfPair.length;    
     for (int stuffIdx = 0; stuffIdx < companyListOfStuffLength; stuffIdx++) {
@@ -370,29 +376,24 @@ class DataHandler {
 
   void pressOtherSet(String setName) {
     ListOfCategoryWrapper.changeSet(listOfCategory, setName);
-    for (Category eachCategory in listOfCategory) {
-      print(eachCategory.categoryName);
-      for (StuffWithCheckPair pair in eachCategory.listOfPair) {
-        print(pair.stuff + " : " + pair.isCheckedStuffBySet[setName].toString());
-      }
-      print("---");
-    }
+    // for (Category eachCategory in listOfCategory) {
+    //   print(eachCategory.categoryName);
+    //   for (StuffWithCheckPair pair in eachCategory.listOfPair) {
+    //     print(pair.stuff + " : " + pair.isCheckedStuffBySet[setName].toString());
+    //   }
+    //   print("---");
+    // }
   }
 
   // check 또는 uncheck
-  void pressStuff(String categoryName, String stuffName, String setName) {
-    Category category = listOfCategory.firstWhere((eachCategory) => eachCategory.categoryName == categoryName);
-    StuffWithCheckPair pair = category.listOfPair.firstWhere((eachPair) => eachPair.stuff == stuffName);
-
-    pair.isCheckedStuffBySet[setName] = !pair.isCheckedStuffBySet[setName]!;
+  void pressStuff(StuffWithCheckPair pair, String setName) {
+    pair.toggleBySet(setName);
     ListOfCategoryWrapper.sortEachCategories(listOfCategory, setName);
   }
 
-  void pressCategory(String categoryName, String setName) {
-    Category category = listOfCategory.firstWhere((eachCategory) => eachCategory.categoryName == categoryName);
-    
-    category.isCheckedCategoryBySet[setName] = !category.isCheckedCategoryBySet[setName]!;
-    ListOfCategoryWrapper.sortEachCategories(listOfCategory, setName);
+  void pressCategory(Category category, String setName) {
+    category.toggleBySet(setName);
+    ListOfCategoryWrapper.changeSet(listOfCategory, setName);
   }
 
   // void newCategory(String categoryName, String setName)
