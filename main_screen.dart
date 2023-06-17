@@ -302,7 +302,7 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
                   ),
                 ),
               ),
-              if (isSelected)
+              if (isSelectedDropdown)
                 Container(
                   decoration: BoxDecoration(
                     color : Colors.grey[100],
