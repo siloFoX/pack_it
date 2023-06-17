@@ -17,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   double tabBarHeight = 35.0;
   double tabBarExtendedHeight = 5.0;
+  bool isEditMode = false;
 
   DataHandler dataHandler = DataHandler();
   late String selectedSet = dataHandler.listOfSet[0];
@@ -65,14 +66,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   child : Container(
                     alignment : Alignment.centerRight,
                     child : TextButton(
-                      onPressed : () {},
+                      onPressed : () {
+                        setState(() {
+                          isEditMode = !isEditMode;
+                          dataHandler.pressSet(selectedSet);
+                        });
+                      },
                       style : TextButton.styleFrom(
                         foregroundColor : Colors.white,
                         backgroundColor : Colors.white,
                       ),
-                      child : const Text(
-                        "편집",
-                        style : TextStyle(
+                      child : Text(
+                        isEditMode ? "완료" : "편집",
+                        style : const TextStyle(
                           color : Colors.black,
                           fontSize : 10,
                         ),
@@ -189,38 +195,55 @@ class _HomeScreenState extends State<HomeScreen> {
       height : isSelected ? tabBarHeight + tabBarExtendedHeight : tabBarHeight,
       margin : const EdgeInsets.symmetric(horizontal : 3),
       padding : const EdgeInsets.all(0),
-      child : OutlinedButton(
-        onPressed : () {
-          setState(() {
-            selectedSet = tabName;
-            dataHandler.pressOtherSet(selectedSet);
-          });
-        },
-        style : OutlinedButton.styleFrom(
-          backgroundColor : isSelected ? Colors.black : Colors.white,
-          minimumSize : Size.zero,
-          padding : const EdgeInsets.all(3),
-          side : const BorderSide(
-            color : Colors.black,
-            width : 1,
-          ),
-          shape : RoundedRectangleBorder(
-            borderRadius : BorderRadius.circular(0),
-          ),
-        ),
-        child : Container(
-          height : tabBarHeight,
-          margin : isSelected ? EdgeInsets.only(bottom : tabBarExtendedHeight) : null,
-          child : Center(
-            child : Text(
-              tabName,
-              style : TextStyle(
-                fontSize : 10,
-                color : isSelected ? Colors.white : Colors.black,
+      child : Stack(
+        children : [
+          OutlinedButton(
+            onPressed : () {
+              setState(() {
+                selectedSet = tabName;
+                dataHandler.pressSet(selectedSet);
+              });
+            },
+            style : OutlinedButton.styleFrom(
+              backgroundColor : isSelected ? Colors.black : Colors.white,
+              minimumSize : Size.zero,
+              padding : const EdgeInsets.all(3),
+              side : const BorderSide(
+                color : Colors.black,
+                width : 1,
+              ),
+              shape : RoundedRectangleBorder(
+                borderRadius : BorderRadius.circular(0),
+              ),
+            ),
+            child : Container(
+              height : tabBarHeight,
+              margin : isSelected ? EdgeInsets.only(bottom : tabBarExtendedHeight) : null,
+              child : Center(
+                child : Text(
+                  tabName,
+                  style : TextStyle(
+                    fontSize : 10,
+                    color : isSelected ? Colors.white : Colors.black,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+          if (isEditMode) {
+            Positioned(
+              top : 8,
+              right : 8,
+              child : GestureDetector(
+                onTap : () {},
+                child: Icon(
+                  Icons.delete,
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          }
+        ],
       ),
     );
   }
@@ -272,9 +295,9 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
               ),
               if (isSelected)
                 Container(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color : Colors.grey[200],
-                    border: Border(
+                    border: const Border(
                       left : BorderSide(
                         color : Colors.black,
                         width : 1.0,
@@ -561,10 +584,10 @@ class DataHandler {
   }
   
   void initiativeSort() {
-    pressOtherSet(listOfSet[0]);
+    pressSet(listOfSet[0]);
   }
 
-  void pressOtherSet(String setName) {
+  void pressSet(String setName) {
     ListOfCategoryWrapper.changeSet(listOfCategory, setName);
     // for (Category eachCategory in listOfCategory) {
     //   print(eachCategory.categoryName);
