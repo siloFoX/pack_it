@@ -30,6 +30,10 @@ class StuffWithCheckPair implements Comparable<StuffWithCheckPair> {
   void uncheckBySet(String setName) {
     isCheckedStuffBySet[setName] = false;
   }
+
+  void toggleBySet(String setName) {
+    isCheckedStuffBySet[setName] = !isCheckedStuffBySet[setName]!;
+  }
   
   void newSet(String setName) {
     uncheckBySet(setName);
@@ -70,15 +74,19 @@ class Category implements Comparable<Category> {
   void checkBySet(String setName) {
     isCheckedCategoryBySet[setName] = true;
     for (StuffWithCheckPair pair in listOfPair) {
-      pair.isCheckedCategoryBySet[setName] = true;
+      pair.checkBySet(setName);
     }
   }
   
   void uncheckBySet(String setName) {
     isCheckedCategoryBySet[setName] = false;
     for (StuffWithCheckPair pair in listOfPair) {
-      pair.isCheckedCategoryBySet[setName] = false;
+      pair.uncheckBySet(setName);
     }
+  }
+
+  void toggleBySet(String setName) {
+    isCheckedCategoryBySet[setName]! ? uncheckBySet(setName) : checkBySet(setName);
   }
   
   void newSetCategorySetting(List<String> listOfSet) {
@@ -129,11 +137,11 @@ class ListOfCategoryWrapper {
   }
 }
 
-class SetDataHandler {
+class DataHandler {
   List<String> listOfSet = [];
   List<Category> listOfCategory = [];
   
-  SetDataHandler () {
+  DataHandler () {
     listOfSet = ["회사", "본가", "친구", "자취방"];
     final int listOfSetLength = listOfSet.length;
     
@@ -142,19 +150,6 @@ class SetDataHandler {
       Category(categoryName : "운동"),
       Category(categoryName : "숙박"),
     ];
-    
-    final int listOfCategoryLength = listOfCategory.length;
-    
-    // initialize every categories
-    listOfCategory[0].checkBySet("회사");
-    listOfCategory[0].uncheckBySet("본가");
-    listOfCategory[0].uncheckBySet("친구");
-    listOfCategory[0].uncheckBySet("자취방");
-    for (int categoryIdx = 1; categoryIdx < listOfCategoryLength; categoryIdx++) {
-      for (int setIdx = 0; setIdx < listOfSetLength; setIdx++) {
-        listOfCategory[categoryIdx].uncheckBySet(listOfSet[setIdx]);
-      }
-    }
     
     // // Make '회사' category's stuff
     listOfCategory[0].listOfPair = [
@@ -167,17 +162,28 @@ class SetDataHandler {
       StuffWithCheckPair(stuff : "틴트 파우치"),
       StuffWithCheckPair(stuff : "휴대폰"),
     ];
+    listOfCategory[1].listOfPair = [
+      StuffWithCheckPair(stuff : "물"),
+      StuffWithCheckPair(stuff : "이어폰"),
+    ];
+    listOfCategory[2].listOfPair = [
+      StuffWithCheckPair(stuff : "집들이 선물"),
+      StuffWithCheckPair(stuff : "치약"),
+      StuffWithCheckPair(stuff : "칫솔"),
+      StuffWithCheckPair(stuff : "충전기"),
+    ];
 
-    final int companyListOfStuffLength = listOfCategory[0].listOfPair.length;    
-    for (int stuffIdx = 0; stuffIdx < companyListOfStuffLength; stuffIdx++) {
+    // initialize every categories
+    final int listOfCategoryLength = listOfCategory.length;
+    for (int categoryIdx = 0; categoryIdx < listOfCategoryLength; categoryIdx++) {
       for (int setIdx = 0; setIdx < listOfSetLength; setIdx++) {
-        listOfCategory[0].listOfPair[stuffIdx].uncheckBySet(listOfSet[setIdx]);
+        listOfCategory[categoryIdx].uncheckBySet(listOfSet[setIdx]);
       }
     }
-    
-    for (int stuffIdx = 0; stuffIdx < companyListOfStuffLength - 2; stuffIdx++) { 
-      listOfCategory[0].listOfPair[stuffIdx].checkBySet("회사");
-    }
+    listOfCategory[0].checkBySet("회사");
+    listOfCategory[1].checkBySet("회사");
+
+    final int companyListOfStuffLength = listOfCategory[0].listOfPair.length;
     listOfCategory[0].listOfPair[companyListOfStuffLength - 2].uncheckBySet("회사");
     listOfCategory[0].listOfPair[companyListOfStuffLength - 1].uncheckBySet("회사");    
     
@@ -185,34 +191,29 @@ class SetDataHandler {
   }
   
   void initiativeSort() {
-    pressOtherSet(listOfSet[0]);
+    pressSet(listOfSet[0]);
   }
 
-  void pressOtherSet(String setName) {
+  void pressSet(String setName) {
     ListOfCategoryWrapper.changeSet(listOfCategory, setName);
-    for (Category eachCategory in listOfCategory) {
-      print(eachCategory.categoryName);
-      for (StuffWithCheckPair pair in eachCategory.listOfPair) {
-        print(pair.stuff + " : " + pair.isCheckedStuffBySet[setName].toString());
-      }
-      print("---");
-    }
+    // for (Category eachCategory in listOfCategory) {
+    //   print(eachCategory.categoryName);
+    //   for (StuffWithCheckPair pair in eachCategory.listOfPair) {
+    //     print(pair.stuff + " : " + pair.isCheckedStuffBySet[setName].toString());
+    //   }
+    //   print("---");
+    // }
   }
 
   // check 또는 uncheck
-  void pressStuff(String categoryName, String stuffName, String setName) {
-    Category category = listOfCategory.firstWhere((eachCategory) => eachCategory.categoryName == categoryName);
-    StuffWithCheckPair pair = category.listOfPair.firstWhere((eachPair) => eachPair.stuff == stuffName);
-
-    pair.isCheckedStuffBySet[setName] = pair.isCheckedStuffBySet[setName]! ? false : true;
+  void pressStuff(StuffWithCheckPair pair, String setName) {
+    pair.toggleBySet(setName);
     ListOfCategoryWrapper.sortEachCategories(listOfCategory, setName);
   }
 
-  void pressCategory(String categoryName, String setName) {
-    Category category = listOfCategory.firstWhere((eachCategory) => eachCategory.categoryName == categoryName);
-    
-    category.isCheckedCategoryBySet[setName] ? category.uncheckBySet[setName] : category.checkBySet[setName];
-    ListOfCategoryWrapper.sortEachCategories(listOfCategory, setName);
+  void pressCategory(Category category, String setName) {
+    category.toggleBySet(setName);
+    ListOfCategoryWrapper.changeSet(listOfCategory, setName);
   }
 
   // void newCategory(String categoryName, String setName)

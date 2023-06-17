@@ -15,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+//   TextEdittingController controller;
   double tabBarHeight = 35.0;
   double tabBarExtendedHeight = 5.0;
   bool isEditMode = false;
@@ -25,8 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // initState 부분은 DB 에서 가져올 부분을 위해 내버려둠
   @override
   void initState () {
-    // dataHandler = DataHandler();
-    // selectedSet = dataHandler.listOfSet[0];
+//     controller = TextEdittingController();
     super.initState();
   }
 
@@ -69,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       onPressed : () {
                         setState(() {
                           isEditMode = !isEditMode;
+                          dataHandler.pressEdit(isEditMode);
                         });
                       },
                       style : TextButton.styleFrom(
@@ -97,8 +98,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // body-tabBar
             Container(
-              decoration: const BoxDecoration(
-                border: Border(
+              decoration : isEditMode ? null : const BoxDecoration(
+                border : Border(
                   bottom : BorderSide(
                     color : Colors.black,
                     width : 1.0,
@@ -121,20 +122,17 @@ class _HomeScreenState extends State<HomeScreen> {
             // body-contents
             Expanded(
               child : Container(
-                padding : const EdgeInsets.fromLTRB(10, 8, 10, 0),
+                padding : const EdgeInsets.fromLTRB(10, 5, 10, 0),
                 child : Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
-                        child: Container(
-                          child: SingleChildScrollView(
-                            child: ScrollableDropdown(
-                              dataHandler : dataHandler,
-                              selectedSet : selectedSet,
-                              isEditMode : isEditMode,
-                            ),
+                        child: SingleChildScrollView(
+                          child: ScrollableDropdown(
+                            dataHandler : dataHandler,
+                            selectedSet : selectedSet,
+                            isEditMode : isEditMode,
                           ),
                         ),
                       ),
@@ -184,8 +182,56 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // tab list
-  List<Widget> renderTabs () {
-    return dataHandler.listOfSet.map((eachSetName) => eachTab(eachSetName)).toList();
+  List<Widget> renderTabs() {
+    List<Widget> listOfTabs = dataHandler.listOfSet.map((eachSetName) => eachTab(eachSetName)).toList();
+
+    if (isEditMode) {
+      listOfTabs.insert(0, tabToAdd());
+    }
+
+    return listOfTabs;
+  }
+
+  Widget tabToAdd() {
+    return Container(
+      width : 45.0,
+      height : tabBarHeight,
+      padding : const EdgeInsets.all(0),
+      child : Stack(
+        children : [
+          Container(
+            margin : const EdgeInsets.fromLTRB(3, 3, 3, 0),
+            child : OutlinedButton(
+              onPressed : () {},
+              style : OutlinedButton.styleFrom(
+                backgroundColor : Colors.white,
+                minimumSize : Size.zero,
+                padding : const EdgeInsets.all(3),
+                side : const BorderSide(
+                  color : Colors.black,
+                  width : 1,
+                ),
+                shape : RoundedRectangleBorder(
+                  borderRadius : BorderRadius.circular(0),
+                ),
+              ),
+              child : Container(
+                height : tabBarHeight,
+                child : const Center(
+                  child : Text(
+                    "+ 추가",
+                    style : TextStyle(
+                      fontSize : 10,
+                      color : Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // each tab
@@ -252,8 +298,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-
 }
 
 
@@ -269,93 +313,102 @@ class ScrollableDropdown extends StatefulWidget {
   });
 
   @override
-  _ScrollableDropdownState createState() => _ScrollableDropdownState();
+  State<ScrollableDropdown> createState() => ScrollableDropdownState();
 }
 
-class _ScrollableDropdownState extends State<ScrollableDropdown> {
+class ScrollableDropdownState extends State<ScrollableDropdown> {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      data: ThemeData(
-        splashColor: Colors.white,
-        highlightColor: Colors.white,
+      data : ThemeData(
+        splashColor : Colors.white,
+        highlightColor : Colors.white,
       ),
-      child: Column(
-        children: widget.dataHandler.listOfCategory.map((eachCategory) {
-          bool isSelectedDropdown = widget.isEditMode ? true : eachCategory.isCheckedCategoryBySet[widget.selectedSet]!;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              GestureDetector(
-                onTap: () => widget.isEditMode ? () {} : tapCategory(eachCategory),
-                child: Container(
-                  height: 28,
-                  margin: eachCategory != widget.dataHandler.listOfCategory.first ? const EdgeInsets.only(top: 12) : null,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color : Colors.black,
-                      width : 1.0,
-                    ),
+      child : Column(
+        children : renderDropdown(),
+      ),
+    );
+  }
+
+  List<Widget> renderDropdown() {
+    List<Widget> dropdownList = widget.dataHandler.listOfCategory.map((eachCategory) {
+      bool isSelectedDropdown = widget.isEditMode ? true : eachCategory.isCheckedCategoryBySet[widget.selectedSet]!;
+      return Column(
+        crossAxisAlignment : CrossAxisAlignment.stretch,
+        children: [
+          GestureDetector(
+            onTap : () => widget.isEditMode ? () {} : tapCategory(eachCategory),
+            child : Container(
+              height : 28,
+              margin : eachCategory != widget.dataHandler.listOfCategory.first ? const EdgeInsets.only(top: 12) : null,
+              decoration : BoxDecoration(
+                border : Border.all(
+                  color : Colors.black,
+                  width : 1.0,
+                ),
+              ),
+              child : customTile(
+                category : eachCategory,
+              ),
+            ),
+          ),
+          if (isSelectedDropdown)
+            Container(
+              decoration : BoxDecoration(
+                color : Colors.grey[100],
+                border: const Border(
+                  left : BorderSide(
+                    color : Colors.black,
+                    width : 1.0,
                   ),
-                  child: customListTile(
-                    category : eachCategory,
+                  right : BorderSide(
+                    color : Colors.black,
+                    width : 1.0,
+                  ),
+                  bottom : BorderSide(
+                    color : Colors.black,
+                    width : 1.0,
                   ),
                 ),
               ),
-              if (isSelectedDropdown)
-                Container(
-                  decoration: BoxDecoration(
-                    color : Colors.grey[100],
-                    border: const Border(
-                      left : BorderSide(
-                        color : Colors.black,
-                        width : 1.0,
-                      ),
-                      right : BorderSide(
-                        color : Colors.black,
-                        width : 1.0,
-                      ),
-                      bottom : BorderSide(
-                        color : Colors.black,
-                        width : 1.0,
-                      ),
-                    ),
-                  ),
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: eachCategory.listOfPair.length,
-                    itemBuilder: (BuildContext context, int idx) {
-                      final pair = eachCategory.listOfPair[idx];
-                      return Column(
-                        children: [
-                          GestureDetector(
-                            onTap : () => widget.isEditMode ? () {} : tapStuff(pair),
-                            child : Container(
-                              height: 19,
-                              padding: const EdgeInsets.only(left : 15),
-                              child : customListTile(
-                                pair : pair,
-                                fontSize : 8,
-                              ),
-                            ),
+              child : ListView.separated(
+                shrinkWrap : true,
+                physics : const NeverScrollableScrollPhysics(),
+                itemCount : eachCategory.listOfPair.length,
+                itemBuilder : (BuildContext context, int idx) {
+                  final pair = eachCategory.listOfPair[idx];
+                  return Column(
+                    children: [
+                      GestureDetector(
+                        onTap : () => widget.isEditMode ? () {} : tapStuff(pair),
+                        child : Container(
+                          height : 19,
+                          padding : const EdgeInsets.only(left : 15),
+                          child : customTile(
+                            pair : pair,
                           ),
-                          if (idx != eachCategory.listOfPair.length - 1)
-                            const Divider(
-                              height: 1,
-                              color: Colors.black,
-                            ),
-                        ],
-                      );
-                    },
-                    separatorBuilder: (BuildContext context, int index) => const SizedBox(), // Empty separator
-                  ),
-                ),
-            ],
-          );
-        }).toList(),
-      ),
-    );
+                        ),
+                      ),
+                      if (idx != eachCategory.listOfPair.length - 1)
+                        const Divider(
+                          height : 1,
+                          color : Colors.black,
+                        ),
+                    ],
+                  );
+                },
+                separatorBuilder : (BuildContext context, int index) => const SizedBox(), // Empty separator
+              ),
+            ),
+        ],
+      );
+    }).toList();
+    
+    if (widget.isEditMode) {
+      dropdownList.add(addingListTile(isPair : false));
+    }
+
+    return dropdownList;
   }
 
   void tapCategory(Category category) {
@@ -370,7 +423,39 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
     });
   }
 
-  Widget customListTile({StuffWithCheckPair? pair, Category? category, double? fontSize}) {
+  Widget addingListTile({required bool isPair}) {
+    return Column(
+      crossAxisAlignment : CrossAxisAlignment.stretch,
+      children: [
+        GestureDetector(
+          onTap : () => isPair ? () {} : () {},
+          child : Container(
+            height : isPair ? 19 : 28,
+            margin : isPair ? null : const EdgeInsets.only(top: 12),
+            decoration : BoxDecoration(
+              color : isPair ? Colors.grey[100] : Colors.white,
+              border : Border.all(
+                color : Colors.black,
+                width : 1.0,
+              ),
+            ),
+            child : Center(
+              child : Text(
+                isPair ? "+ 추가" : "+ 카테고리 추가",
+                style : TextStyle(
+                  color : Colors.black,
+                  fontSize : isPair ? 8 : 10,
+                  fontWeight : FontWeight.w400,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget customTile({StuffWithCheckPair? pair, Category? category}) {
     final isPair = pair != null;
     bool isChecked = isPair ? pair.isCheckedStuffBySet[widget.selectedSet]! : category!.isCheckedCategoryBySet[widget.selectedSet]!;
     isChecked = widget.isEditMode ? true : isChecked;
@@ -390,7 +475,7 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
             isPair ? pair.stuff : category!.categoryName,
             style: TextStyle(
               color : isChecked ? Colors.black : Colors.grey,
-              fontSize : fontSize ?? 10,
+              fontSize : isPair ? 8 : 10,
               fontWeight : FontWeight.w500,
             ),
           ),
@@ -496,17 +581,25 @@ class Category implements Comparable<Category> {
   void toggleBySet(String setName) {
     isCheckedCategoryBySet[setName]! ? uncheckBySet(setName) : checkBySet(setName);
   }
-  
-  void newSetCategorySetting(List<String> listOfSet) {
-    for (String eachSet in listOfSet) {
-      isCheckedCategoryBySet[eachSet] = false;
+
+  void newSet(String setName) {
+    uncheckBySet(setName);
+  }
+
+  void deleteSet(String setName) {
+    isCheckedCategoryBySet.remove(setName);
+    for (StuffWithCheckPair pair in listOfPair) {
+      pair.deleteSet(setName);
     }
   }
 
-  void setNewStuff(String stuffName, List<String> listOfSet) {
+  void newStuff(String stuffName, List<String> listOfSet) {
     StuffWithCheckPair newStuff = StuffWithCheckPair(stuff : stuffName, listOfSet : listOfSet);
     listOfPair.insert(0, newStuff);
-    sortListOfPairByListOfSet(listOfSet);
+  }
+
+  void deleteStuff(StuffWithCheckPair pair) {
+    listOfPair.remove(pair);
   }
 
   void sortListOfPairByListOfSet(List<String> listOfSet) {
@@ -624,8 +717,38 @@ class DataHandler {
     ListOfCategoryWrapper.changeSet(listOfCategory, setName);
   }
 
-  // void newCategory(String categoryName, String setName)
-  // void deleteCategory(String categoryName)
-  // void newStuff(String categoryName, String stuffName, String setName)
-  // void deleteStuff(String categoryName, String stuffName)
+  void pressEdit(bool isEditMode) {
+
+  }
+
+  void newSet(String setName) {
+    listOfSet.insert(0, setName);
+    for (Category each in listOfCategory) {
+      each.newSet(setName);
+    }
+  }
+
+  void deleteSet(String setName) {
+    listOfSet.remove(setName);
+    for (Category each in listOfCategory) {
+      each.deleteSet(setName);
+    }
+  }
+
+  void newCategory(String categoryName) {
+    Category newCategory = Category(categoryName : categoryName, listOfSet : listOfSet);
+    listOfCategory.insert(0, newCategory);
+  }
+
+  void deleteCategory(Category category) {
+    listOfCategory.remove(category);
+  }
+
+  void newStuff(Category category, String stuffName) {
+    category.newStuff(stuffName, listOfSet);
+  }
+
+  void deleteStuff(Category category, StuffWithCheckPair pair) {
+    category.deleteStuff(pair);
+  }
 }
