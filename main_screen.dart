@@ -353,59 +353,15 @@ class ScrollableDropdownState extends State<ScrollableDropdown> {
             ),
           ),
           if (isSelectedDropdown)
-            Container(
-              decoration : BoxDecoration(
-                color : Colors.grey[100],
-                border: const Border(
-                  left : BorderSide(
-                    color : Colors.black,
-                    width : 1.0,
-                  ),
-                  right : BorderSide(
-                    color : Colors.black,
-                    width : 1.0,
-                  ),
-                  bottom : BorderSide(
-                    color : Colors.black,
-                    width : 1.0,
-                  ),
-                ),
-              ),
-              child : ListView.separated(
-                shrinkWrap : true,
-                physics : const NeverScrollableScrollPhysics(),
-                itemCount : eachCategory.listOfPair.length,
-                itemBuilder : (BuildContext context, int idx) {
-                  final pair = eachCategory.listOfPair[idx];
-                  return Column(
-                    children: [
-                      GestureDetector(
-                        onTap : () => widget.isEditMode ? () {} : tapStuff(pair),
-                        child : Container(
-                          height : 19,
-                          padding : const EdgeInsets.only(left : 15),
-                          child : customTile(
-                            pair : pair,
-                          ),
-                        ),
-                      ),
-                      if (idx != eachCategory.listOfPair.length - 1)
-                        const Divider(
-                          height : 1,
-                          color : Colors.black,
-                        ),
-                    ],
-                  );
-                },
-                separatorBuilder : (BuildContext context, int index) => const SizedBox(), // Empty separator
-              ),
+            Column(
+              children : renderStuffTiles(eachCategory),
             ),
         ],
       );
     }).toList();
     
     if (widget.isEditMode) {
-      dropdownList.add(addingListTile(isPair : false));
+      dropdownList.add(addingCategoryTile());
     }
 
     return dropdownList;
@@ -423,35 +379,89 @@ class ScrollableDropdownState extends State<ScrollableDropdown> {
     });
   }
 
-  Widget addingListTile({required bool isPair}) {
-    return Column(
-      crossAxisAlignment : CrossAxisAlignment.stretch,
-      children: [
-        GestureDetector(
-          onTap : () => isPair ? () {} : () {},
-          child : Container(
-            height : isPair ? 19 : 28,
-            margin : isPair ? null : const EdgeInsets.only(top: 12),
-            decoration : BoxDecoration(
-              color : isPair ? Colors.grey[100] : Colors.white,
-              border : Border.all(
+  List<Widget> renderStuffTiles(Category category) {
+    List<Widget> stuffList = category.listOfPair.map((pair) {
+      return GestureDetector(
+        onTap : () => widget.isEditMode ? () {} : tapStuff(pair),
+        child : Container(
+          height : 19,
+          decoration : const BoxDecoration(
+            border : Border(
+              left : BorderSide(
+                color : Colors.black,
+                width : 1.0,
+              ),
+              right : BorderSide(
+                color : Colors.black,
+                width : 1.0,
+              ),
+              bottom : BorderSide(
                 color : Colors.black,
                 width : 1.0,
               ),
             ),
-            child : Center(
-              child : Text(
-                isPair ? "+ 추가" : "+ 카테고리 추가",
-                style : TextStyle(
-                  color : Colors.black,
-                  fontSize : isPair ? 8 : 10,
-                  fontWeight : FontWeight.w400,
-                ),
-              ),
+          ),
+          child : customTile(
+            pair : pair,
+          ),
+        ),
+      );
+    }).toList();
+
+    if(widget.isEditMode) {
+      stuffList.insert(0, addingStuffTile());
+    }
+
+    return stuffList;
+  }
+
+  Widget addingCategoryTile() {
+    return Column(
+      crossAxisAlignment : CrossAxisAlignment.stretch,
+      children: [
+        addingTile(isPair : false),
+      ],
+    );
+  }
+
+  Widget addingStuffTile() {
+    return addingTile(isPair : true);
+  }
+
+  Widget addingTile({required isPair}) {
+    return GestureDetector(
+      onTap : isPair ? () {} : () {},
+      child : Container(
+        height : isPair ? 19 : 28,
+        margin : isPair ? null : const EdgeInsets.only(top: 12),
+        decoration : BoxDecoration(
+          color : Colors.white,
+          border : isPair ? const Border(
+            left : BorderSide(
+              color : Colors.black,
+              width : 1.0,
+            ),
+            right : BorderSide(
+              color : Colors.black,
+              width : 1.0,
+            ),
+            bottom : BorderSide(
+              color : Colors.black,
+              width : 1.0,
+            ),
+          ): Border.all(),
+        ),
+        child : Center(
+          child : Text(
+            isPair ? "+ 추가하기" : "+ 카테고리 추가",
+            style : TextStyle(
+              color : Colors.black,
+              fontSize : isPair ? 8 : 10,
+              fontWeight : FontWeight.w500,
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 
