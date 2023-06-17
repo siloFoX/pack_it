@@ -61,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                // appBar-settings
+                // appBar-edit
                 Expanded(
                   child : Container(
                     alignment : Alignment.centerRight,
@@ -69,7 +69,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       onPressed : () {
                         setState(() {
                           isEditMode = !isEditMode;
-                          dataHandler.pressSet(selectedSet);
                         });
                       },
                       style : TextButton.styleFrom(
@@ -191,10 +190,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // each tab
   Widget eachTab(String tabName) {
-    bool isSelected = isEditMode ? false : selectedSet == tabName;
+    bool isSelectedTab = isEditMode ? false : selectedSet == tabName;
     return Container(
       width : 45.0,
-      height : isSelected ? tabBarHeight + tabBarExtendedHeight : tabBarHeight,
+      height : isSelectedTab ? tabBarHeight + tabBarExtendedHeight : tabBarHeight,
       padding : const EdgeInsets.all(0),
       child : Stack(
         children : [
@@ -202,13 +201,15 @@ class _HomeScreenState extends State<HomeScreen> {
             margin : const EdgeInsets.fromLTRB(3, 3, 3, 0),
             child : OutlinedButton(
               onPressed : () {
-                setState(() {
-                  selectedSet = tabName;
-                  dataHandler.pressSet(selectedSet);
-                });
+                if(!isEditMode) {
+                  setState(() {
+                    selectedSet = tabName;
+                    dataHandler.pressSet(selectedSet);
+                  });
+                }
               },
               style : OutlinedButton.styleFrom(
-                backgroundColor : isSelected ? Colors.black : Colors.white,
+                backgroundColor : isSelectedTab ? Colors.black : Colors.white,
                 minimumSize : Size.zero,
                 padding : const EdgeInsets.all(3),
                 side : const BorderSide(
@@ -221,13 +222,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child : Container(
                 height : tabBarHeight,
-                margin : isSelected ? EdgeInsets.only(bottom : tabBarExtendedHeight) : null,
+                margin : isSelectedTab ? EdgeInsets.only(bottom : tabBarExtendedHeight) : null,
                 child : Center(
                   child : Text(
                     tabName,
                     style : TextStyle(
                       fontSize : 10,
-                      color : isSelected ? Colors.white : Colors.black,
+                      color : isSelectedTab ? Colors.white : Colors.black,
                     ),
                   ),
                 ),
@@ -281,14 +282,12 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
       ),
       child: Column(
         children: widget.dataHandler.listOfCategory.map((eachCategory) {
-          bool isSelected = eachCategory.isCheckedCategoryBySet[widget.selectedSet]!;
-          // isSelected = widget.isEditMode ? true : isSelected;
+          bool isSelectedDropdown = widget.isEditMode ? true : eachCategory.isCheckedCategoryBySet[widget.selectedSet]!;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               GestureDetector(
-                // onTap: () => widget.isEditMode ? () {} : tapCategory(eachCategory),
-                onTap: () => tapCategory(eachCategory),
+                onTap: () => widget.isEditMode ? () {} : tapCategory(eachCategory),
                 child: Container(
                   height: 28,
                   margin: eachCategory != widget.dataHandler.listOfCategory.first ? const EdgeInsets.only(top: 12) : null,
@@ -331,8 +330,7 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
                       return Column(
                         children: [
                           GestureDetector(
-                            // onTap : () => widget.isEditMode ? () {} : tapStuff(pair),
-                            onTap : () => tapStuff(pair),
+                            onTap : () => widget.isEditMode ? () {} : tapStuff(pair),
                             child : Container(
                               height: 19,
                               padding: const EdgeInsets.only(left : 15),
@@ -400,7 +398,7 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
             Expanded(
               child : Container(
                 alignment : Alignment.centerRight,
-                margin : EdgeInsets.only(right : isPair ? 7 : 5),
+                margin : EdgeInsets.only(right : isPair ? 6 : 5),
                 child : GestureDetector(
                   onTap : () {},
                   child : Icon(
@@ -561,19 +559,6 @@ class DataHandler {
       Category(categoryName : "숙박"),
     ];
     
-    final int listOfCategoryLength = listOfCategory.length;
-    
-    // initialize every categories
-    listOfCategory[0].checkBySet("회사");
-    listOfCategory[0].uncheckBySet("본가");
-    listOfCategory[0].uncheckBySet("친구");
-    listOfCategory[0].uncheckBySet("자취방");
-    for (int categoryIdx = 1; categoryIdx < listOfCategoryLength; categoryIdx++) {
-      for (int setIdx = 0; setIdx < listOfSetLength; setIdx++) {
-        listOfCategory[categoryIdx].uncheckBySet(listOfSet[setIdx]);
-      }
-    }
-    
     // // Make '회사' category's stuff
     listOfCategory[0].listOfPair = [
       StuffWithCheckPair(stuff : "워치 충전하기"),
@@ -596,16 +581,17 @@ class DataHandler {
       StuffWithCheckPair(stuff : "충전기"),
     ];
 
-    final int companyListOfStuffLength = listOfCategory[0].listOfPair.length;    
-    for (int stuffIdx = 0; stuffIdx < companyListOfStuffLength; stuffIdx++) {
+    // initialize every categories
+    final int listOfCategoryLength = listOfCategory.length;
+    for (int categoryIdx = 0; categoryIdx < listOfCategoryLength; categoryIdx++) {
       for (int setIdx = 0; setIdx < listOfSetLength; setIdx++) {
-        listOfCategory[0].listOfPair[stuffIdx].uncheckBySet(listOfSet[setIdx]);
+        listOfCategory[categoryIdx].uncheckBySet(listOfSet[setIdx]);
       }
     }
-    
-    for (int stuffIdx = 0; stuffIdx < companyListOfStuffLength - 2; stuffIdx++) { 
-      listOfCategory[0].listOfPair[stuffIdx].checkBySet("회사");
-    }
+    listOfCategory[0].checkBySet("회사");
+    listOfCategory[1].checkBySet("회사");
+
+    final int companyListOfStuffLength = listOfCategory[0].listOfPair.length;
     listOfCategory[0].listOfPair[companyListOfStuffLength - 2].uncheckBySet("회사");
     listOfCategory[0].listOfPair[companyListOfStuffLength - 1].uncheckBySet("회사");    
     
