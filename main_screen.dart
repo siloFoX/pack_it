@@ -134,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: ScrollableDropdown(
                               dataHandler : dataHandler,
                               selectedSet : selectedSet,
+                              isEditMode : isEditMode,
                             ),
                           ),
                         ),
@@ -159,23 +160,24 @@ class _HomeScreenState extends State<HomeScreen> {
              ),
 
             // body-start button
-            Container(
-              height : 35.0,
-              padding : const EdgeInsets.symmetric(horizontal : 10),
-              child : ElevatedButton(
-                onPressed : () {},
-                style : ElevatedButton.styleFrom(
-                  backgroundColor : Colors.black,
-                ),
-                child : const Text(
-                  "시작하기",
-                  style : TextStyle(
-                    fontSize : 12,
-                    color : Colors.white,
+            if (!isEditMode)
+              Container(
+                height : 35.0,
+                padding : const EdgeInsets.symmetric(horizontal : 10),
+                child : ElevatedButton(
+                  onPressed : () {},
+                  style : ElevatedButton.styleFrom(
+                    backgroundColor : Colors.black,
+                  ),
+                  child : const Text(
+                    "시작하기",
+                    style : TextStyle(
+                      fontSize : 12,
+                      color : Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -188,75 +190,81 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // each tab
-  Widget eachTab (String tabName) {
-    bool isSelected = selectedSet == tabName;
+  Widget eachTab(String tabName) {
+    bool isSelected = isEditMode ? false : selectedSet == tabName;
     return Container(
       width : 45.0,
       height : isSelected ? tabBarHeight + tabBarExtendedHeight : tabBarHeight,
-      margin : const EdgeInsets.symmetric(horizontal : 3),
       padding : const EdgeInsets.all(0),
       child : Stack(
         children : [
-          OutlinedButton(
-            onPressed : () {
-              setState(() {
-                selectedSet = tabName;
-                dataHandler.pressSet(selectedSet);
-              });
-            },
-            style : OutlinedButton.styleFrom(
-              backgroundColor : isSelected ? Colors.black : Colors.white,
-              minimumSize : Size.zero,
-              padding : const EdgeInsets.all(3),
-              side : const BorderSide(
-                color : Colors.black,
-                width : 1,
+          Container(
+            margin : const EdgeInsets.fromLTRB(3, 3, 3, 0),
+            child : OutlinedButton(
+              onPressed : () {
+                setState(() {
+                  selectedSet = tabName;
+                  dataHandler.pressSet(selectedSet);
+                });
+              },
+              style : OutlinedButton.styleFrom(
+                backgroundColor : isSelected ? Colors.black : Colors.white,
+                minimumSize : Size.zero,
+                padding : const EdgeInsets.all(3),
+                side : const BorderSide(
+                  color : Colors.black,
+                  width : 1,
+                ),
+                shape : RoundedRectangleBorder(
+                  borderRadius : BorderRadius.circular(0),
+                ),
               ),
-              shape : RoundedRectangleBorder(
-                borderRadius : BorderRadius.circular(0),
-              ),
-            ),
-            child : Container(
-              height : tabBarHeight,
-              margin : isSelected ? EdgeInsets.only(bottom : tabBarExtendedHeight) : null,
-              child : Center(
-                child : Text(
-                  tabName,
-                  style : TextStyle(
-                    fontSize : 10,
-                    color : isSelected ? Colors.white : Colors.black,
+              child : Container(
+                height : tabBarHeight,
+                margin : isSelected ? EdgeInsets.only(bottom : tabBarExtendedHeight) : null,
+                child : Center(
+                  child : Text(
+                    tabName,
+                    style : TextStyle(
+                      fontSize : 10,
+                      color : isSelected ? Colors.white : Colors.black,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-          if (isEditMode) {
+          if (isEditMode)
             Positioned(
-              top : 8,
-              right : 8,
+              top : 0,
+              right : 1,
               child : GestureDetector(
                 onTap : () {},
-                child: Icon(
-                  Icons.delete,
-                  color: Colors.red,
+                child : const Icon(
+                  Icons.remove_circle,
+                  size : 10,
+                  color : Colors.red,
                 ),
               ),
             ),
-          }
         ],
       ),
     );
   }
+
+
 }
 
 
 class ScrollableDropdown extends StatefulWidget {
   final DataHandler dataHandler;
   final String selectedSet;
+  final bool isEditMode;
 
   const ScrollableDropdown({
     required this.dataHandler,
     required this.selectedSet,
+    required this.isEditMode,
   });
 
   @override
@@ -274,10 +282,12 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
       child: Column(
         children: widget.dataHandler.listOfCategory.map((eachCategory) {
           bool isSelected = eachCategory.isCheckedCategoryBySet[widget.selectedSet]!;
+          // isSelected = widget.isEditMode ? true : isSelected;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               GestureDetector(
+                // onTap: () => widget.isEditMode ? () {} : tapCategory(eachCategory),
                 onTap: () => tapCategory(eachCategory),
                 child: Container(
                   height: 28,
@@ -296,7 +306,7 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
               if (isSelected)
                 Container(
                   decoration: BoxDecoration(
-                    color : Colors.grey[200],
+                    color : Colors.grey[100],
                     border: const Border(
                       left : BorderSide(
                         color : Colors.black,
@@ -321,6 +331,7 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
                       return Column(
                         children: [
                           GestureDetector(
+                            // onTap : () => widget.isEditMode ? () {} : tapStuff(pair),
                             onTap : () => tapStuff(pair),
                             child : Container(
                               height: 19,
@@ -362,26 +373,44 @@ class _ScrollableDropdownState extends State<ScrollableDropdown> {
   }
 
   Widget customListTile({StuffWithCheckPair? pair, Category? category, double? fontSize}) {
-    final bool isChecked = pair != null ? pair.isCheckedStuffBySet[widget.selectedSet]! : category!.isCheckedCategoryBySet[widget.selectedSet]!;
+    final isPair = pair != null;
+    bool isChecked = isPair ? pair.isCheckedStuffBySet[widget.selectedSet]! : category!.isCheckedCategoryBySet[widget.selectedSet]!;
+    isChecked = widget.isEditMode ? true : isChecked;
     return Container(
       alignment: Alignment.centerLeft,
       child: Row(
         children: [
           const SizedBox(width : 6),
-          Icon(
-            isChecked ? Icons.check_box_outlined : Icons.check_box_outline_blank,
-            size : 10,
-            color : isChecked ? Colors.black : Colors.grey,
-          ),
-          const SizedBox(width : 6),
+          if (!widget.isEditMode)
+            Icon(
+              isChecked ? Icons.check_box_outlined : Icons.check_box_outline_blank,
+              size : 10,
+              color : isChecked ? Colors.black : Colors.grey,
+            ),
+          const SizedBox(width : 4),
           Text(
-            pair != null ? pair.stuff : category!.categoryName,
+            isPair ? pair.stuff : category!.categoryName,
             style: TextStyle(
               color : isChecked ? Colors.black : Colors.grey,
               fontSize : fontSize ?? 10,
               fontWeight : FontWeight.w500,
             ),
           ),
+          if(widget.isEditMode)
+            Expanded(
+              child : Container(
+                alignment : Alignment.centerRight,
+                margin : EdgeInsets.only(right : isPair ? 7 : 5),
+                child : GestureDetector(
+                  onTap : () {},
+                  child : Icon(
+                    Icons.remove_circle,
+                    size : isPair ? 10 : 12,
+                    color : Colors.red,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
