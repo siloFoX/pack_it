@@ -473,7 +473,7 @@ class ScrollableDropdownState extends State<ScrollableDropdown> {
       alignment: Alignment.centerLeft,
       child: Row(
         children: [
-          const SizedBox(width : 6),
+          isPair ? const SizedBox(width : 18) : const SizedBox(width : 6),
           if (!widget.isEditMode)
             Icon(
               isChecked ? Icons.check_box_outlined : Icons.check_box_outline_blank,
