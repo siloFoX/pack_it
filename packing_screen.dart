@@ -9,7 +9,7 @@ void main() {
   );
 }
 
-class PackingScreen extends StatelessWidget {
+class PackingScreen extends StatefulWidget {
   final DataHandler dataHandler;
 
   const PackingScreen({
@@ -18,14 +18,250 @@ class PackingScreen extends StatelessWidget {
   }) : super(key : key);
 
   @override
+  State<PackingScreen> createState() => PackingScreenState();
+}
+
+class PackingScreenState extends State<PackingScreen> {
+  late final int numberOfStuffs;
+  static const double spaceBetweenRow = 10;
+
+  @override
+  void initState() {
+    numberOfStuffs = widget.dataHandler.tmpListOfStuff.length;
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body : Center(
-        child : ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: Text(dataHandler.listOfSet[0]),
+    return SafeArea(
+      top : true,
+      bottom : true,
+      child :Scaffold(
+        body : Center(
+          child : Container(
+            padding : const EdgeInsets.fromLTRB(10, 20, 10, 0),
+            child : Column(            
+              children : [
+                progressBar(widget.dataHandler.delayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length, numberOfStuffs),
+
+                renderStuff(widget.dataHandler.tmpListOfStuff),
+                renderDelayedStuff(widget.dataHandler.delayedListOfStuff),
+                renderCheckedStuff(widget.dataHandler.tmpListOfCheckedStuff),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void pressStuff(String stuffName) {
+    widget.dataHandler.pressTmpStuff(stuffName);
+  }
+
+  void swipeStuff(String stuffName) {
+    widget.dataHandler.swipeTmpStuff(stuffName);
+  }
+
+  Widget progressBar(int nowLength, int fullLength) {
+    return Column(
+      children : [
+        Container(
+          child : LinearProgressIndicator(
+            value : nowLength / fullLength,
+            minHeight : 6.0,
+            backgroundColor : Colors.grey,
+            valueColor : const AlwaysStoppedAnimation<Color>(Colors.black),
+          ),
+        ),
+        const SizedBox(height : 3),
+        Container(
+          child : Center(
+            child : Text(
+              "$nowLength/$fullLength",
+              style : const TextStyle(
+                fontSize : 10.0,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget renderStuff(List<String> tmpListOfStuff) {
+    return tmpListOfStuff.isEmpty ? Container() : Column(
+      children : [
+        const SizedBox(height : spaceBetweenRow),
+        Container(
+          decoration : containerDecoration(false),
+          child : Column(
+            children : tmpListOfStuff.map((stuffName) => CustomTile(titleContent : stuffName, onTap : tap, onDismissed : swipe, isDelay : false, isChecked : false)).toList(),
+          ),
+        ),
+      ]
+    );
+  }
+
+  Widget renderDelayedStuff(List<DelayedStuff> delayedListOfStuff) {
+    return delayedListOfStuff.isEmpty ? Container() : Column(
+      children : [
+        const SizedBox(height : spaceBetweenRow),
+        Row(
+          mainAxisAlignment : MainAxisAlignment.end,
+          children : [
+            Container(
+              child : Text(
+                "나중에",
+                style : TextStyle(
+                  fontSize : 9.0,
+                  fontWeight : FontWeight.w500,
+                  color : Colors.grey[700],
+                ),
+              ),
+            ),
+            Expanded(
+              child : Container(
+                alignment : Alignment.centerRight,
+                child : GestureDetector(
+                  child : Row(
+                    mainAxisAlignment : MainAxisAlignment.end,
+                    children : [
+                      const Icon(
+                        Icons.access_time,
+                        size : 10.0,
+                        color : Colors.blue,
+                      ),
+                      const SizedBox(width : 3),
+                      Container(
+                        child : const Text(
+                          "알림 설정",
+                          style : TextStyle(
+                            fontSize : 9.0,
+                            fontWeight : FontWeight.w500,
+                            color : Colors.blue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height : 3),
+        Container(
+          decoration : containerDecoration(false),
+          child : Column(
+            children : delayedListOfStuff.map((delayedStuff) => CustomTile(titleContent : delayedStuff.stuffName, onDismissed : swipe, isDelay : true, isChecked : false)).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget renderCheckedStuff(List<String> tmpListOfCheckedStuff) {
+    return tmpListOfCheckedStuff.isEmpty ? Container() : Column(
+      children : [
+        const SizedBox(height : spaceBetweenRow),
+        Container(
+          alignment : Alignment.centerLeft,
+          child : Text(
+            "완료됨",
+            style : TextStyle(
+              fontSize : 9.0,
+              fontWeight : FontWeight.w500,
+              color : Colors.grey[700],
+            ),
+          ),
+        ),
+        const SizedBox(height : 3),
+        Container(
+          decoration : containerDecoration(true),
+          child : Column(
+            children : tmpListOfCheckedStuff.map((stuffName) => CustomTile(titleContent : stuffName, onTap : tap, isDelay : false, isChecked : true)).toList(),
+          ),
+        ),
+      ]
+    );
+  }
+
+  void tap(String stuffName) {
+    setState(() {
+      pressStuff(stuffName);
+    });
+  }
+
+  void swipe(String stuffName) {
+    setState(() {
+      swipeStuff(stuffName);
+    });
+  }
+
+  Decoration containerDecoration(bool isChecked) {
+    return BoxDecoration(
+      border : Border(
+        left : BorderSide(
+          color : isChecked ? Colors.grey : Colors.black,
+          width : 1.0,
+        ),
+        top : BorderSide(
+          color : isChecked ? Colors.grey : Colors.black,
+          width : 1.0,
+        ),
+        right : BorderSide(
+          color : isChecked ? Colors.grey : Colors.black,
+          width : 1.0,
+        ),
+      ),
+    );
+  }
+}
+
+class CustomTile extends StatelessWidget {
+  final String titleContent;
+  final Function? onTap;
+  final Function? onDismissed;
+  final bool isDelay;
+  final bool isChecked;
+
+  const CustomTile({
+    required this.titleContent,
+    this.onTap,
+    this.onDismissed,
+    required this.isDelay,
+    required this.isChecked,
+    Key? key,
+  }) : super(key : key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap : () => isChecked || !isDelay ? onTap!(titleContent) : null,
+      child : Container(
+        decoration : BoxDecoration(
+          border : Border(
+            bottom : BorderSide(
+              color : isChecked ? Colors.grey : Colors.black,
+              width : 1.0,
+            ),
+          ),
+        ),
+        child : Dismissible(
+          direction : isChecked ? DismissDirection.none : DismissDirection.endToStart,
+          key : UniqueKey(),
+          onDismissed : (direction) => isDelay || !isChecked ? onDismissed!(titleContent) : null,
+          child : Center(
+            child : Text(
+              titleContent,
+              style : TextStyle(
+                fontSize : 10.0,
+                fontWeight : FontWeight.w500,
+                color : isDelay ? Colors.blue : (isChecked ? Colors.grey : Colors.black),
+              ),
+            ),
+          ),
         ),
       ),
     );

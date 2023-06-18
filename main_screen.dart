@@ -520,7 +520,7 @@ class ScrollableDropdownState extends State<ScrollableDropdown> {
 
 
 // page for demo
-class PackingScreen extends StatelessWidget {
+class PackingScreen extends StatefulWidget {
   final DataHandler dataHandler;
 
   const PackingScreen({
@@ -529,14 +529,180 @@ class PackingScreen extends StatelessWidget {
   }) : super(key : key);
 
   @override
+  State<PackingScreen> createState() => PackingScreenState();
+}
+
+class PackingScreenState extends State<PackingScreen> {
+  late final int numberOfStuffs;
+  static const double spaceBetweenRow = 10;
+
+  @override
+  void initState() {
+    numberOfStuffs = widget.dataHandler.tmpListOfStuff.length;
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body : Center(
-        child : ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
+    return SafeArea(
+      top : true,
+      bottom : true,
+      child :Scaffold(
+        body : Center(
+          child : Container(
+            padding : const EdgeInsets.fromLTRB(10, 20, 10, 0),
+            child : Column(            
+              children : [
+                progressBar(widget.dataHandler.delayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length, numberOfStuffs),
+
+                renderStuff(widget.dataHandler.tmpListOfStuff),
+
+                const SizedBox(height : spaceBetweenRow),
+                renderDelayedStuff(widget.dataHandler.delayedListOfStuff),
+
+                renderCheckedStuff(widget.dataHandler.tmpListOfCheckedStuff),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void pressStuff(String stuffName) {
+    widget.dataHandler.pressTmpStuff(stuffName);
+  }
+
+  void swipeStuff(String stuffName) {
+    widget.dataHandler.swipeTmpStuff(stuffName);
+  }
+
+  Widget progressBar(int nowLength, int fullLength) {
+    return Column(
+      children : [
+        Container(
+          child : LinearProgressIndicator(
+            value : nowLength / fullLength,
+            minHeight : 6.0,
+            backgroundColor : Colors.grey,
+            valueColor : const AlwaysStoppedAnimation<Color>(Colors.black),
+          ),
+        ),
+        const SizedBox(height : 3),
+        Container(
+          child : Center(
+            child : Text(
+              "$nowLength/$fullLength",
+              style : const TextStyle(
+                fontSize : 10.0,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget renderStuff(List<String> tmpListOfStuff) {
+    return Column(
+      children : [
+        tmpListOfStuff.isEmpty ? const SizedBox(height : 0) : const SizedBox(height : spaceBetweenRow),
+        Container(
+          decoration : tmpListOfStuff.isEmpty ? null : containerDecoration(),
+          child : Column(
+            children : tmpListOfStuff.map((stuffName) => CustomTile(titleContent : stuffName, onDismissed : swipe)).toList(),
+          ),
+        ),
+      ]
+    );
+  }
+
+  void swipe(String stuffName) {
+    setState(() {
+      swipeStuff(stuffName);
+    });
+  }
+
+  Widget renderDelayedStuff(List<DelayedStuff> delayedListOfStuff) {
+    return Container( // here
+      decoration : containerDecoration(),
+    );
+  }
+
+  Widget renderCheckedStuff(List<String> tmpListOfCheckedStuff) {
+    return Column(
+      children : [
+        tmpListOfCheckedStuff.isEmpty ? const SizedBox(height : 0) : const SizedBox(height : spaceBetweenRow),
+        Container(
+          decoration : tmpListOfCheckedStuff.isEmpty ? null : containerDecoration(),
+          child : Column(
+            children : tmpListOfCheckedStuff.map((stuffName) => CustomTile(titleContent : stuffName, onDismissed : swipe)).toList(), // here
+          ),
+        ),
+      ]
+    );
+  }
+
+  Decoration containerDecoration() {
+    return const BoxDecoration(
+      border : Border(
+        left : BorderSide(
+          color : Colors.black,
+          width : 1.0,
+        ),
+        top : BorderSide(
+          color : Colors.black,
+          width : 1.0,
+        ),
+        right : BorderSide(
+          color : Colors.black,
+          width : 1.0,
+        ),
+      ),
+    );
+  }
+}
+
+class CustomTile extends StatelessWidget {
+  final String titleContent;
+  // final Function onTap;
+  final Function onDismissed;
+  // final bool isDelay;
+  // final bool isChecked;
+
+  const CustomTile({
+    required this.titleContent,
+    // required this.onTap,
+    required this.onDismissed,
+    // required this.isDelay,
+    // required this.isChecked,
+    Key? key,
+  }) : super(key : key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration : const BoxDecoration(
+        border : Border(
+          bottom : BorderSide(
+            color : Colors.black,
+            width : 1.0,
+          ),
+        ),
+      ),
+      child : Dismissible(
+        direction : DismissDirection.endToStart,
+        key : UniqueKey(),
+        onDismissed : (direction) => onDismissed(titleContent),
+        child : GestureDetector(
+          onTap : () {
+            print("Clicked");
           },
-          child: Text(dataHandler.listOfSet[0]),
+          child : Container(
+            child : Center(
+              child : Text(titleContent),
+            ),
+          ),
         ),
       ),
     );
