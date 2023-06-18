@@ -69,7 +69,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       onPressed : () {
                         setState(() {
                           isEditMode = !isEditMode;
-                          dataHandler.pressEdit(isEditMode);
                         });
                       },
                       style : TextButton.styleFrom(
@@ -162,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height : 35.0,
                 padding : const EdgeInsets.symmetric(horizontal : 10),
                 child : ElevatedButton(
-                  onPressed : () {},
+                  onPressed : () => pressStartButton(),
                   style : ElevatedButton.styleFrom(
                     backgroundColor : Colors.black,
                   ),
@@ -177,6 +176,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  void pressStartButton() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder : (context) => PackingScreen(dataHandler : dataHandler),
       ),
     );
   }
@@ -482,7 +490,7 @@ class ScrollableDropdownState extends State<ScrollableDropdown> {
             ),
           const SizedBox(width : 4),
           Text(
-            isPair ? pair.stuff : category!.categoryName,
+            isPair ? pair.stuffName : category!.categoryName,
             style: TextStyle(
               color : isChecked ? Colors.black : Colors.grey,
               fontSize : isPair ? 8 : 10,
@@ -510,14 +518,39 @@ class ScrollableDropdownState extends State<ScrollableDropdown> {
   }
 }
 
+
+// page for demo
+class PackingScreen extends StatelessWidget {
+  final DataHandler dataHandler;
+
+  const PackingScreen({
+    required this.dataHandler,
+    Key? key,
+  }) : super(key : key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body : Center(
+        child : ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: Text(dataHandler.listOfSet[0]),
+        ),
+      ),
+    );
+  }
+}
+
 // dataHandler part (분리해야하지만 데모 때문에 포함됨)
 
 class StuffWithCheckPair implements Comparable<StuffWithCheckPair> {
-  String stuff;
+  String stuffName;
   Map<String, bool> isCheckedStuffBySet = {};
   
   StuffWithCheckPair({
-    required this.stuff,
+    required this.stuffName,
     List<String>? listOfSet,
   }) {
     if (listOfSet != null) 
@@ -548,7 +581,7 @@ class StuffWithCheckPair implements Comparable<StuffWithCheckPair> {
 
   @override
   int compareTo(StuffWithCheckPair other) {
-    return stuff.compareTo(other.stuff);
+    return stuffName.compareTo(other.stuffName);
   }
   
   int compareToWithSetName(StuffWithCheckPair other, String setName) {
@@ -604,7 +637,7 @@ class Category implements Comparable<Category> {
   }
 
   void newStuff(String stuffName, List<String> listOfSet) {
-    StuffWithCheckPair newStuff = StuffWithCheckPair(stuff : stuffName, listOfSet : listOfSet);
+    StuffWithCheckPair newStuff = StuffWithCheckPair(stuffName : stuffName, listOfSet : listOfSet);
     listOfPair.insert(0, newStuff);
   }
 
@@ -635,6 +668,16 @@ class Category implements Comparable<Category> {
   }
 }
 
+class DelayedStuff {
+  String stuffName;
+  late DateTime whenIPackIt;
+
+  DelayedStuff({
+    required this.stuffName,
+    whenIPackIt,
+  });
+}
+
 class ListOfCategoryWrapper {
   static void changeSet(List<Category> listOfCategory, String setName) {
     listOfCategory.sort((a, b) => a.compareToWithSetName(b, setName));
@@ -648,41 +691,54 @@ class ListOfCategoryWrapper {
   }
 }
 
+class TmpListWrapper {
+  static void delayToggle(String stuffName, List<String> tmpListOfStuff, List<DelayedStuff> delayedListOfStuff) {
+    if (tmpListOfStuff.contains(stuffName)) {
+      tmpListOfStuff.remove(stuffName);
+      delayedListOfStuff.add(DelayedStuff(stuffName : stuffName));
+    }
+    else {
+      tmpListOfStuff.add(stuffName);      
+      delayedListOfStuff.remove(delayedListOfStuff.firstWhere((each) => each.stuffName == stuffName, orElse : () => DelayedStuff(stuffName : "")));
+    }
+  }
+
+  static void checkToggle(String stuffName, List<String> tmpListOfStuff, List<String> tmpListOfCheckedStuff) {
+    if (tmpListOfStuff.contains(stuffName)) {
+      tmpListOfStuff.remove(stuffName);
+      tmpListOfCheckedStuff.add(stuffName);
+    }
+    else {
+      tmpListOfStuff.add(stuffName);
+      tmpListOfCheckedStuff.remove(stuffName);
+    }
+  }
+}
+
 class DataHandler {
   List<String> listOfSet = [];
   List<Category> listOfCategory = [];
+
+  List<String> tmpListOfStuff = [];
+  List<DelayedStuff> delayedListOfStuff = [];
+  List<String> tmpListOfCheckedStuff = [];
   
   DataHandler () {
     listOfSet = ["회사", "본가", "친구", "자취방"];
     final int listOfSetLength = listOfSet.length;
     
-    listOfCategory = [
-      Category(categoryName : "외출(기본)"),
-      Category(categoryName : "운동"),
-      Category(categoryName : "숙박"),
-    ];
+    List<String> categoryNames = ["외출(기본)", "운동", "숙박"];
+    listOfCategory = categoryNames.map((eachName) => Category(categoryName : eachName)).toList();
     
-    // // Make '회사' category's stuff
-    listOfCategory[0].listOfPair = [
-      StuffWithCheckPair(stuff : "워치 충전하기"),
-      StuffWithCheckPair(stuff : "휴대폰 충전하기"),
-      StuffWithCheckPair(stuff : "인공눈물"),
-      StuffWithCheckPair(stuff : "락토프리 약"),
-      StuffWithCheckPair(stuff : "에어팟"),
-      StuffWithCheckPair(stuff : "애플 워치"),
-      StuffWithCheckPair(stuff : "틴트 파우치"),
-      StuffWithCheckPair(stuff : "휴대폰"),
-    ];
-    listOfCategory[1].listOfPair = [
-      StuffWithCheckPair(stuff : "물"),
-      StuffWithCheckPair(stuff : "이어폰"),
-    ];
-    listOfCategory[2].listOfPair = [
-      StuffWithCheckPair(stuff : "집들이 선물"),
-      StuffWithCheckPair(stuff : "치약"),
-      StuffWithCheckPair(stuff : "칫솔"),
-      StuffWithCheckPair(stuff : "충전기"),
-    ];
+    // Make category's stuff
+    List<String> companyStuffs = ["워치 충전하기", "휴대폰 충전하기", "인공눈물", "락토프리 약", "에어팟", "애플 워치", "틴트 파우치", "휴대폰"];
+    listOfCategory[0].listOfPair = companyStuffs.map((eachStuff) => StuffWithCheckPair(stuffName : eachStuff)).toList();
+
+    List<String> exerciseStuffs = ["물", "이어폰"];
+    listOfCategory[1].listOfPair = exerciseStuffs.map((eachStuff) => StuffWithCheckPair(stuffName : eachStuff)).toList();
+
+    List<String> overdayStuffs = ["집들이 선물", "치약", "칫솔", "충전기"];
+    listOfCategory[2].listOfPair = overdayStuffs.map((eachStuff) => StuffWithCheckPair(stuffName : eachStuff)).toList();
 
     // initialize every categories
     final int listOfCategoryLength = listOfCategory.length;
@@ -692,12 +748,16 @@ class DataHandler {
       }
     }
     listOfCategory[0].checkBySet("회사");
+    tmpListOfStuff.addAll(companyStuffs);
     listOfCategory[1].checkBySet("회사");
+    tmpListOfStuff.addAll(exerciseStuffs);
 
     final int companyListOfStuffLength = listOfCategory[0].listOfPair.length;
     listOfCategory[0].listOfPair[companyListOfStuffLength - 2].uncheckBySet("회사");
-    listOfCategory[0].listOfPair[companyListOfStuffLength - 1].uncheckBySet("회사");    
-    
+    tmpListOfStuff.removeAt(companyListOfStuffLength - 1);
+    listOfCategory[0].listOfPair[companyListOfStuffLength - 1].uncheckBySet("회사");
+    tmpListOfStuff.removeAt(companyListOfStuffLength - 2);
+
     initiativeSort();
   }
   
@@ -706,29 +766,34 @@ class DataHandler {
   }
 
   void pressSet(String setName) {
+    tmpListOfStuff.clear();
+    listOfCategory.forEach((category) => category.listOfPair.forEach((pair) => pair.isCheckedStuffBySet[setName]! ? tmpListOfStuff.add(pair.stuffName) : null));
     ListOfCategoryWrapper.changeSet(listOfCategory, setName);
-    // for (Category eachCategory in listOfCategory) {
-    //   print(eachCategory.categoryName);
-    //   for (StuffWithCheckPair pair in eachCategory.listOfPair) {
-    //     print(pair.stuff + " : " + pair.isCheckedStuffBySet[setName].toString());
-    //   }
-    //   print("---");
-    // }
   }
 
   // check 또는 uncheck
   void pressStuff(StuffWithCheckPair pair, String setName) {
     pair.toggleBySet(setName);
+    pair.isCheckedStuffBySet[setName]! 
+    ? tmpListOfStuff.add(pair.stuffName) 
+    : tmpListOfStuff.remove(pair.stuffName);
     ListOfCategoryWrapper.sortEachCategories(listOfCategory, setName);
   }
 
   void pressCategory(Category category, String setName) {
     category.toggleBySet(setName);
+    category.isCheckedCategoryBySet[setName]!
+    ? category.listOfPair.forEach((pair) => tmpListOfStuff.add(pair.stuffName))
+    : category.listOfPair.forEach((pair) => tmpListOfStuff.remove(pair.stuffName));
     ListOfCategoryWrapper.changeSet(listOfCategory, setName);
   }
 
-  void pressEdit(bool isEditMode) {
+  void pressTmpStuff(String stuffName) {
+    TmpListWrapper.checkToggle(stuffName, tmpListOfStuff, tmpListOfCheckedStuff);
+  }
 
+  void swipeTmpStuff(String stuffName) {
+    TmpListWrapper.delayToggle(stuffName, tmpListOfStuff, delayedListOfStuff);
   }
 
   void newSet(String setName) {
@@ -752,6 +817,7 @@ class DataHandler {
 
   void deleteCategory(Category category) {
     listOfCategory.remove(category);
+    category.listOfPair.map((pair) => tmpListOfStuff.remove(pair.stuffName));
   }
 
   void newStuff(Category category, String stuffName) {
@@ -760,5 +826,6 @@ class DataHandler {
 
   void deleteStuff(Category category, StuffWithCheckPair pair) {
     category.deleteStuff(pair);
+    tmpListOfStuff.remove(pair.stuffName);
   }
 }
