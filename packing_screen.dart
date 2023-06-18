@@ -219,6 +219,7 @@ class PackingScreenState extends State<PackingScreen> {
   }
 }
 
+// here design please
 class CustomTile extends StatelessWidget {
   final String titleContent;
   final Function? onTap;
@@ -237,33 +238,46 @@ class CustomTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap : () => isChecked || !isDelay ? onTap!(titleContent) : null,
-      child : Container(
-        decoration : BoxDecoration(
-          border : Border(
-            bottom : BorderSide(
-              color : isChecked ? Colors.grey : Colors.black,
-              width : 1.0,
+    return Row( 
+      mainAxisAlignment : MainAxisAlignment.start,
+      children : [
+        GestureDetector(
+          onTap : () => isChecked || !isDelay ? onTap!(titleContent) : null,
+          child : Container(
+            decoration : BoxDecoration(
+              border : Border(
+                bottom : BorderSide(
+                  color : isChecked ? Colors.grey : Colors.black,
+                  width : 1.0,
+                ),
+              ),
             ),
-          ),
-        ),
-        child : Dismissible(
-          direction : isChecked ? DismissDirection.none : DismissDirection.endToStart,
-          key : UniqueKey(),
-          onDismissed : (direction) => isDelay || !isChecked ? onDismissed!(titleContent) : null,
-          child : Center(
-            child : Text(
-              titleContent,
-              style : TextStyle(
-                fontSize : 10.0,
-                fontWeight : FontWeight.w500,
-                color : isDelay ? Colors.blue : (isChecked ? Colors.grey : Colors.black),
+            child : Dismissible(
+              direction : isChecked ? DismissDirection.none : DismissDirection.endToStart,
+              key : UniqueKey(),
+              onDismissed : (direction) => isDelay || !isChecked ? onDismissed!(titleContent) : null,
+              child : Row(
+                children : [
+                  Icon(
+                    isChecked ? Icons.check_box_outlined : Icons.check_box_outline_blank,
+                    size : 10,
+                    color : isDelay ? Colors. blue : isChecked ? Colors.grey : Colors.black,
+                  ),
+                  const SizedBox(width : 3),
+                  Text(
+                    titleContent,
+                    style : TextStyle(
+                      fontSize : 10.0,
+                      fontWeight : FontWeight.w500,
+                      color : isDelay ? Colors.blue : isChecked ? Colors.grey : Colors.black,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
