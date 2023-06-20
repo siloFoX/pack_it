@@ -24,6 +24,7 @@ class PackingScreen extends StatefulWidget {
 class PackingScreenState extends State<PackingScreen> {
   late final int numberOfStuffs;
   static const double spaceBetweenRow = 10;
+  static const double spaceLeftAndRight = 10;
 
   @override
   void initState() {
@@ -39,14 +40,42 @@ class PackingScreenState extends State<PackingScreen> {
       child :Scaffold(
         body : Center(
           child : Container(
-            padding : const EdgeInsets.fromLTRB(10, 20, 10, 0),
-            child : Column(            
+            padding : const EdgeInsets.only(top : 20),
+            child : Column(
+              crossAxisAlignment : CrossAxisAlignment.stretch,
               children : [
                 progressBar(widget.dataHandler.delayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length, numberOfStuffs),
+                Expanded(
+                  child : Container(
+                    margin : const EdgeInsets.symmetric(horizontal : spaceLeftAndRight),
+                    child : SingleChildScrollView(
+                      child : Column(            
+                        children : [
+                          renderStuff(widget.dataHandler.tmpListOfStuff),
+                          renderDelayedStuff(widget.dataHandler.delayedListOfStuff),
+                          renderCheckedStuff(widget.dataHandler.tmpListOfCheckedStuff),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
 
-                renderStuff(widget.dataHandler.tmpListOfStuff),
-                renderDelayedStuff(widget.dataHandler.delayedListOfStuff),
-                renderCheckedStuff(widget.dataHandler.tmpListOfCheckedStuff),
+                // ad-banner
+                Container(
+                  height : 35.0,
+                  color : Colors.blue,
+                  child : const Center(
+                    child : Text(
+                      "Ad Banner",
+                      style : TextStyle(
+                        color : Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+
+                if (widget.dataHandler.delayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length == numberOfStuffs)
+                  renderCompeleteButton(),
               ],
             ),
           ),
@@ -64,28 +93,31 @@ class PackingScreenState extends State<PackingScreen> {
   }
 
   Widget progressBar(int nowLength, int fullLength) {
-    return Column(
-      children : [
-        Container(
-          child : LinearProgressIndicator(
-            value : nowLength / fullLength,
-            minHeight : 6.0,
-            backgroundColor : Colors.grey,
-            valueColor : const AlwaysStoppedAnimation<Color>(Colors.black),
+    return Container(
+      margin : const EdgeInsets.symmetric(horizontal : spaceLeftAndRight),
+      child : Column(
+        children : [
+          Container(
+            child : LinearProgressIndicator(
+              value : nowLength / fullLength,
+              minHeight : 6.0,
+              backgroundColor : Colors.grey,
+              valueColor : const AlwaysStoppedAnimation<Color>(Colors.black),
+            ),
           ),
-        ),
-        const SizedBox(height : 3),
-        Container(
-          child : Center(
-            child : Text(
-              "$nowLength/$fullLength",
-              style : const TextStyle(
-                fontSize : 10.0,
+          const SizedBox(height : 3),
+          Container(
+            child : Center(
+              child : Text(
+                "$nowLength/$fullLength",
+                style : const TextStyle(
+                  fontSize : 10.0,
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -217,9 +249,37 @@ class PackingScreenState extends State<PackingScreen> {
       ),
     );
   }
+
+  Widget renderCompeleteButton() {
+    return Container(
+      height : 35,
+      margin : const EdgeInsets.symmetric(horizontal : spaceLeftAndRight),
+      child : OutlinedButton(
+        onPressed : () => pressCompeleteButton(),
+        style : OutlinedButton.styleFrom(
+          backgroundColor : Colors.white,
+          side : const BorderSide(
+            color : Colors.black,
+            width : 1.0,
+          ),
+        ),
+        child : const Text(
+          "완료",
+          style : TextStyle(
+            fontSize : 12,
+            color : Colors.black,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void pressCompeleteButton() {
+    print("compelete");
+  }
 }
 
-// here design please
+
 class CustomTile extends StatelessWidget {
   final String titleContent;
   final Function? onTap;
@@ -241,38 +301,47 @@ class CustomTile extends StatelessWidget {
     return Row( 
       mainAxisAlignment : MainAxisAlignment.start,
       children : [
-        GestureDetector(
-          onTap : () => isChecked || !isDelay ? onTap!(titleContent) : null,
-          child : Container(
-            decoration : BoxDecoration(
-              border : Border(
-                bottom : BorderSide(
-                  color : isChecked ? Colors.grey : Colors.black,
-                  width : 1.0,
+        Expanded(
+          child : GestureDetector(
+            onTap : () => isChecked || !isDelay ? onTap!(titleContent) : null,
+            child : Container(
+              height : 28,
+              padding : const EdgeInsets.only(left : 6),
+              decoration : BoxDecoration(
+                border : Border(
+                  bottom : BorderSide(
+                    color : isChecked ? Colors.grey : Colors.black,
+                    width : 1.0,
+                  ),
                 ),
               ),
-            ),
-            child : Dismissible(
-              direction : isChecked ? DismissDirection.none : DismissDirection.endToStart,
-              key : UniqueKey(),
-              onDismissed : (direction) => isDelay || !isChecked ? onDismissed!(titleContent) : null,
-              child : Row(
-                children : [
-                  Icon(
-                    isChecked ? Icons.check_box_outlined : Icons.check_box_outline_blank,
-                    size : 10,
-                    color : isDelay ? Colors. blue : isChecked ? Colors.grey : Colors.black,
+              child : Container(
+                child : Dismissible(
+                  direction : isChecked ? DismissDirection.none : DismissDirection.endToStart,
+                  // background : Container( // how to do that..?
+                  //   color : Colors.blue,
+                  // ),
+                  key : UniqueKey(),
+                  onDismissed : (direction) => isDelay || !isChecked ? onDismissed!(titleContent) : null,
+                  child : Row(
+                    children : [
+                      Icon(
+                        isChecked ? Icons.check_box_outlined : Icons.check_box_outline_blank,
+                        size : 10,
+                        color : isDelay ? Colors. blue : isChecked ? Colors.grey : Colors.black,
+                      ),
+                      const SizedBox(width : 4),
+                      Text(
+                        titleContent,
+                        style : TextStyle(
+                          fontSize : 10.0,
+                          fontWeight : FontWeight.w500,
+                          color : isDelay ? Colors.blue : isChecked ? Colors.grey : Colors.black,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width : 3),
-                  Text(
-                    titleContent,
-                    style : TextStyle(
-                      fontSize : 10.0,
-                      fontWeight : FontWeight.w500,
-                      color : isDelay ? Colors.blue : isChecked ? Colors.grey : Colors.black,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
