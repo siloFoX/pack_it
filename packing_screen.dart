@@ -280,7 +280,7 @@ class PackingScreenState extends State<PackingScreen> {
 }
 
 
-class CustomTile extends StatelessWidget {
+class CustomTile extends StatefulWidget {
   final String titleContent;
   final Function? onTap;
   final Function? onDismissed;
@@ -294,49 +294,74 @@ class CustomTile extends StatelessWidget {
     required this.isDelay,
     required this.isChecked,
     Key? key,
-  }) : super(key : key);
+  }) : super(key: key);
 
   @override
+  State<CustomTile> createState() => CustomTileState();
+}
+
+class CustomTileState extends State<CustomTile> {
+  @override
   Widget build(BuildContext context) {
-    return Row( 
+    return Row(
       mainAxisAlignment : MainAxisAlignment.start,
-      children : [
+      children: [
         Expanded(
-          child : GestureDetector(
-            onTap : () => isChecked || !isDelay ? onTap!(titleContent) : null,
-            child : Container(
-              height : 28,
-              padding : const EdgeInsets.only(left : 6),
-              decoration : BoxDecoration(
-                border : Border(
-                  bottom : BorderSide(
-                    color : isChecked ? Colors.grey : Colors.black,
-                    width : 1.0,
+          child : Dismissible(
+            direction : widget.isChecked ? DismissDirection.none : DismissDirection.endToStart,
+            background : Container(
+              color : widget.isDelay ? Colors.red : Colors.blue,
+              child : Row(
+                children : [
+                  Expanded(child : Container()),
+                  const Icon(
+                    Icons.arrow_back,
+                    color : Colors.white,
+                    size : 18,
+                  ),
+                  const SizedBox(width : 3),
+                  Text(
+                    widget.isDelay ? "되돌리기" : "나중에",
+                    style : const TextStyle(
+                      fontSize : 10.0,
+                      color : Colors.white,
+                      fontWeight : FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width : 5),
+                ],
+              ),
+            ),
+            key : UniqueKey(),
+            onDismissed : (direction) => widget.isDelay || !widget.isChecked ? widget.onDismissed!(widget.titleContent) : null,
+            child : GestureDetector(
+              onTap : () => widget.isChecked || !widget.isDelay ? widget.onTap!(widget.titleContent) : null,
+              child : Container(
+                height : 28,
+                padding : const EdgeInsets.only(left : 6),
+                decoration : BoxDecoration(
+                  border : Border(
+                    bottom : BorderSide(
+                      color : widget.isChecked ? Colors.grey : Colors.black,
+                      width : 1.0,
+                    ),
                   ),
                 ),
-              ),
-              child : Container(
-                child : Dismissible(
-                  direction : isChecked ? DismissDirection.none : DismissDirection.endToStart,
-                  // background : Container( // how to do that..?
-                  //   color : Colors.blue,
-                  // ),
-                  key : UniqueKey(),
-                  onDismissed : (direction) => isDelay || !isChecked ? onDismissed!(titleContent) : null,
+                child : Center(
                   child : Row(
                     children : [
                       Icon(
-                        isChecked ? Icons.check_box_outlined : Icons.check_box_outline_blank,
+                        widget.isChecked ? Icons.check_box_outlined : Icons.check_box_outline_blank,
                         size : 10,
-                        color : isDelay ? Colors. blue : isChecked ? Colors.grey : Colors.black,
+                        color : widget.isDelay ? Colors.blue : widget.isChecked ? Colors.grey : Colors.black,
                       ),
                       const SizedBox(width : 4),
                       Text(
-                        titleContent,
+                        widget.titleContent,
                         style : TextStyle(
                           fontSize : 10.0,
                           fontWeight : FontWeight.w500,
-                          color : isDelay ? Colors.blue : isChecked ? Colors.grey : Colors.black,
+                          color : widget.isDelay ? Colors.blue : widget.isChecked ? Colors.grey : Colors.black,
                         ),
                       ),
                     ],
@@ -350,6 +375,8 @@ class CustomTile extends StatelessWidget {
     );
   }
 }
+
+
 
 // dataHandler part (분리해야하지만 데모 때문에 포함됨)
 
