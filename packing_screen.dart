@@ -275,7 +275,7 @@ class PackingScreenState extends State<PackingScreen> {
   }
 
   void pressCompeleteButton() {
-    print("compelete");
+    Navigator.pop(context);
   }
 }
 
@@ -375,8 +375,6 @@ class CustomTileState extends State<CustomTile> {
     );
   }
 }
-
-
 
 // dataHandler part (분리해야하지만 데모 때문에 포함됨)
 
@@ -505,12 +503,12 @@ class Category implements Comparable<Category> {
 
 class DelayedStuff {
   String stuffName;
-  late DateTime whenIPackIt;
+  late DateTime? whenIPackIt;
 
   DelayedStuff({
     required this.stuffName,
-    whenIPackIt,
-  });
+    DateTime? whenIPackIt,
+  }) : this.whenIPackIt = whenIPackIt ?? DateTime.now();
 }
 
 class ListOfCategoryWrapper {
