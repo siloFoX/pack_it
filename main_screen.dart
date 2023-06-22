@@ -1020,8 +1020,8 @@ class DelayedStuff {
 
   DelayedStuff({
     required this.stuffName,
-    DateTime? whenIPackIt,
-  }) : this.whenIPackIt = whenIPackIt ?? DateTime.now();
+    this.whenIPackIt = null,
+  });
 }
 
 class ListOfCategoryWrapper {

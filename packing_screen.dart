@@ -275,7 +275,58 @@ class PackingScreenState extends State<PackingScreen> {
   }
 
   void pressCompeleteButton() {
-    Navigator.pop(context);
+    if (widget.dataHandler.delayedListOfStuff.every((each) => each.whenIPackIt != null)){
+      Navigator.pop(context);
+    } else {
+      showAlarm();
+    }
+  }
+
+  void showAlarm() { 
+    showDialog(
+      context : context,
+      builder : (BuildContext context) {
+        return AlertDialog(
+          title : const Center(
+            child : Text(
+              "미루려면 알람설정을 하셔야합니다!",
+              style : TextStyle(
+                fontSize : 15.0,
+              ),
+            ),
+          ),
+          content : SingleChildScrollView(
+            child : Column(
+              children : [
+                const Text(
+                  "알람설정 안한 목록",
+                  style : TextStyle(
+                    fontSize : 12.0
+                  )
+                ),
+                const SizedBox(height : 7),
+                ...widget.dataHandler.delayedListOfStuff.map((each) => 
+                  Text(
+                    each.stuffName, 
+                    style : const TextStyle(
+                      fontSize : 10.0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions : [ 
+            ElevatedButton(
+              child : const Text("확인"),
+              onPressed : () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -507,8 +558,8 @@ class DelayedStuff {
 
   DelayedStuff({
     required this.stuffName,
-    DateTime? whenIPackIt,
-  }) : this.whenIPackIt = whenIPackIt ?? DateTime.now();
+    this.whenIPackIt = null,
+  });
 }
 
 class ListOfCategoryWrapper {
