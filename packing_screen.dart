@@ -291,6 +291,7 @@ class PackingScreenState extends State<PackingScreen> {
 
   void pressCompeleteButton() {
     if (widget.dataHandler.tmpDelayedListOfStuff.isEmpty) {
+      widget.dataHandler.compeletePackingCallback();
       Navigator.pop(context);
     } else {
       showAlarm();
@@ -730,6 +731,10 @@ class DataHandler {
   
   void initiativeSort() {
     pressSet(listOfSet[0]);
+  }
+
+  void compeletePackingCallback() {
+    tmpListOfCheckedStuff.clear();
   }
 
   void pressSet(String setName) {
