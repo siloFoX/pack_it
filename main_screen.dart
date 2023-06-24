@@ -538,6 +538,7 @@ class PackingScreenState extends State<PackingScreen> {
   late final int numberOfStuffs;
   static const double spaceBetweenRow = 10;
   static const double spaceLeftAndRight = 10;
+  bool adScreenShow = true;
 
   @override
   void initState() {
@@ -550,48 +551,61 @@ class PackingScreenState extends State<PackingScreen> {
     return SafeArea(
       top : true,
       bottom : true,
-      child :Scaffold(
-        body : Center(
-          child : Container(
-            padding : const EdgeInsets.only(top : 20),
-            child : Column(
-              crossAxisAlignment : CrossAxisAlignment.stretch,
-              children : [
-                progressBar(widget.dataHandler.delayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length, numberOfStuffs),
-                Expanded(
-                  child : Container(
-                    margin : const EdgeInsets.symmetric(horizontal : spaceLeftAndRight),
-                    child : SingleChildScrollView(
-                      child : Column(            
-                        children : [
-                          renderStuff(widget.dataHandler.tmpListOfStuff),
-                          renderDelayedStuff(widget.dataHandler.delayedListOfStuff),
-                          renderCheckedStuff(widget.dataHandler.tmpListOfCheckedStuff),
-                        ],
+      child : Scaffold(
+        body : Stack(
+          children : [
+            Center(
+              child : Container(
+                padding : const EdgeInsets.only(top : 20),
+                child : Column(
+                  crossAxisAlignment : CrossAxisAlignment.stretch,
+                  children : [
+                    progressBar(widget.dataHandler.tmpDelayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length, numberOfStuffs),
+                    Expanded(
+                      child : Container(
+                        margin : const EdgeInsets.symmetric(horizontal : spaceLeftAndRight),
+                        child : SingleChildScrollView(
+                          child : Column(            
+                            children : [
+                              renderStuff(widget.dataHandler.tmpListOfStuff),
+                              renderDelayedStuff(widget.dataHandler.tmpDelayedListOfStuff),
+                              renderCheckedStuff(widget.dataHandler.tmpListOfCheckedStuff),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
 
-                // ad-banner
-                Container(
-                  height : 35.0,
-                  color : Colors.blue,
-                  child : const Center(
-                    child : Text(
-                      "Ad Banner",
-                      style : TextStyle(
-                        color : Colors.white,
+                    // ad-banner
+                    Container(
+                      height : 35.0,
+                      color : Colors.blue,
+                      child : const Center(
+                        child : Text(
+                          "Ad Banner",
+                          style : TextStyle(
+                            color : Colors.white,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
 
-                if (widget.dataHandler.delayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length == numberOfStuffs)
-                  renderCompeleteButton(),
-              ],
+                    if (widget.dataHandler.tmpDelayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length == numberOfStuffs)
+                      renderCompeleteButton(),
+                  ],
+                ),
+              ),
             ),
-          ),
+            if (adScreenShow)
+              Opacity(
+                opacity : 0.4,
+                child : Container(
+                  color : Colors.black,
+                ),
+              ),
+            if (adScreenShow)
+              renderAdScreen(context)
+          ],
         ),
       ),
     );
@@ -648,8 +662,8 @@ class PackingScreenState extends State<PackingScreen> {
     );
   }
 
-  Widget renderDelayedStuff(List<DelayedStuff> delayedListOfStuff) {
-    return delayedListOfStuff.isEmpty ? Container() : Column(
+  Widget renderDelayedStuff(List<DelayedStuff> tmpDelayedListOfStuff) {
+    return tmpDelayedListOfStuff.isEmpty ? Container() : Column(
       children : [
         const SizedBox(height : spaceBetweenRow),
         Row(
@@ -669,6 +683,7 @@ class PackingScreenState extends State<PackingScreen> {
               child : Container(
                 alignment : Alignment.centerRight,
                 child : GestureDetector(
+                  onTap : () {}, // TODO : alarm setting
                   child : Row(
                     mainAxisAlignment : MainAxisAlignment.end,
                     children : [
@@ -699,7 +714,7 @@ class PackingScreenState extends State<PackingScreen> {
         Container(
           decoration : containerDecoration(false),
           child : Column(
-            children : delayedListOfStuff.map((delayedStuff) => CustomTile(titleContent : delayedStuff.stuffName, onDismissed : swipe, isDelay : true, isChecked : false)).toList(),
+            children : tmpDelayedListOfStuff.map((delayedStuff) => CustomTile(titleContent : delayedStuff.stuffName, onDismissed : swipe, isDelay : true, isChecked : false)).toList(),
           ),
         ),
       ],
@@ -788,7 +803,124 @@ class PackingScreenState extends State<PackingScreen> {
   }
 
   void pressCompeleteButton() {
-    Navigator.pop(context);
+    if (widget.dataHandler.tmpDelayedListOfStuff.isEmpty) {
+      Navigator.pop(context);
+    } else {
+      showAlarm();
+    }
+  }
+
+  void showAlarm() { 
+    showDialog(
+      context : context,
+      builder : (BuildContext context) {
+        return AlertDialog(
+          title : const Center(
+            child : Text(
+              "미루려면 알람설정을 하셔야합니다!",
+              style : TextStyle(
+                fontSize : 15.0,
+              ),
+            ),
+          ),
+          content : SingleChildScrollView(
+            child : Column(
+              children : [
+                const Text(
+                  "알람설정 안한 목록",
+                  style : TextStyle(
+                    fontSize : 12.0
+                  )
+                ),
+                const SizedBox(height : 7),
+                ...widget.dataHandler.tmpDelayedListOfStuff.map((each) => 
+                  Text(
+                    each.stuffName, 
+                    style : const TextStyle(
+                      fontSize : 10.0,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions : [ 
+            ElevatedButton(
+              child : const Text("확인"),
+              onPressed : () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget renderAdScreen(BuildContext context) {
+    final double widthSize = MediaQuery.of(context).size.width * 0.8;
+    final double heightSize = MediaQuery.of(context).size.height * 0.35;
+    return Center(
+      child : Column(
+        mainAxisAlignment : MainAxisAlignment.center,
+        children : [
+          Container(
+            width : widthSize,
+            child : Row(
+              children : [
+                Expanded(child : Container()),
+                GestureDetector(
+                  onTap : () {
+                    setState(() {
+                      adScreenShow = false;
+                    });
+                  },
+                  child : const Icon(
+                    Icons.close,
+                    size : 20.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            height : heightSize,
+            width : widthSize,
+            color : Colors.white,
+            child : const Center(
+              child : Text(
+                "광고",
+                style : TextStyle(
+                  color : Colors.black,
+                ),
+              ),
+            ),
+          ),
+          Container(
+            width : widthSize,
+            color : Colors.grey,
+            child : const Column(
+              children : [
+                Text(
+                  "Tip : 준비물을 왼쪽으로 밀어내면 나중에 챙기게 할 수 있어요.",
+                  style : TextStyle(
+                    fontSize : 10.0,
+                    color : Colors.white,
+                  ),
+                ),
+                Text(
+                  "Tip : 나중에 챙긴 준비물은 꼭 알람설정을 해두세요.",
+                  style : TextStyle(
+                    fontSize : 10.0,
+                    color : Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1038,14 +1170,14 @@ class ListOfCategoryWrapper {
 }
 
 class TmpListWrapper {
-  static void delayToggle(String stuffName, List<String> tmpListOfStuff, List<DelayedStuff> delayedListOfStuff) {
+  static void delayToggle(String stuffName, List<String> tmpListOfStuff, List<DelayedStuff> tmpDelayedListOfStuff) {
     if (tmpListOfStuff.contains(stuffName)) {
       tmpListOfStuff.remove(stuffName);
-      delayedListOfStuff.add(DelayedStuff(stuffName : stuffName));
+      tmpDelayedListOfStuff.add(DelayedStuff(stuffName : stuffName));
     }
     else {
       tmpListOfStuff.add(stuffName);      
-      delayedListOfStuff.remove(delayedListOfStuff.firstWhere((each) => each.stuffName == stuffName, orElse : () => DelayedStuff(stuffName : "")));
+      tmpDelayedListOfStuff.remove(tmpDelayedListOfStuff.firstWhere((each) => each.stuffName == stuffName, orElse : () => DelayedStuff(stuffName : "")));
     }
   }
 
@@ -1066,8 +1198,10 @@ class DataHandler {
   List<Category> listOfCategory = [];
 
   List<String> tmpListOfStuff = [];
-  List<DelayedStuff> delayedListOfStuff = [];
+  List<DelayedStuff> tmpDelayedListOfStuff = [];
   List<String> tmpListOfCheckedStuff = [];
+
+  List<DelayedStuff> delayedListOfStuff = [];
   
   DataHandler () {
     listOfSet = ["회사", "본가", "친구", "자취방"];
@@ -1139,7 +1273,7 @@ class DataHandler {
   }
 
   void swipeTmpStuff(String stuffName) {
-    TmpListWrapper.delayToggle(stuffName, tmpListOfStuff, delayedListOfStuff);
+    TmpListWrapper.delayToggle(stuffName, tmpListOfStuff, tmpDelayedListOfStuff);
   }
 
   void newSet(String setName) {

@@ -47,7 +47,7 @@ class PackingScreenState extends State<PackingScreen> {
                 child : Column(
                   crossAxisAlignment : CrossAxisAlignment.stretch,
                   children : [
-                    progressBar(widget.dataHandler.delayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length, numberOfStuffs),
+                    progressBar(widget.dataHandler.tmpDelayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length, numberOfStuffs),
                     Expanded(
                       child : Container(
                         margin : const EdgeInsets.symmetric(horizontal : spaceLeftAndRight),
@@ -55,7 +55,7 @@ class PackingScreenState extends State<PackingScreen> {
                           child : Column(            
                             children : [
                               renderStuff(widget.dataHandler.tmpListOfStuff),
-                              renderDelayedStuff(widget.dataHandler.delayedListOfStuff),
+                              renderDelayedStuff(widget.dataHandler.tmpDelayedListOfStuff),
                               renderCheckedStuff(widget.dataHandler.tmpListOfCheckedStuff),
                             ],
                           ),
@@ -77,7 +77,7 @@ class PackingScreenState extends State<PackingScreen> {
                       ),
                     ),
 
-                    if (widget.dataHandler.delayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length == numberOfStuffs)
+                    if (widget.dataHandler.tmpDelayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length == numberOfStuffs)
                       renderCompeleteButton(),
                   ],
                 ),
@@ -149,8 +149,8 @@ class PackingScreenState extends State<PackingScreen> {
     );
   }
 
-  Widget renderDelayedStuff(List<DelayedStuff> delayedListOfStuff) {
-    return delayedListOfStuff.isEmpty ? Container() : Column(
+  Widget renderDelayedStuff(List<DelayedStuff> tmpDelayedListOfStuff) {
+    return tmpDelayedListOfStuff.isEmpty ? Container() : Column(
       children : [
         const SizedBox(height : spaceBetweenRow),
         Row(
@@ -170,6 +170,7 @@ class PackingScreenState extends State<PackingScreen> {
               child : Container(
                 alignment : Alignment.centerRight,
                 child : GestureDetector(
+                  onTap : () {}, // TODO : alarm setting
                   child : Row(
                     mainAxisAlignment : MainAxisAlignment.end,
                     children : [
@@ -200,7 +201,7 @@ class PackingScreenState extends State<PackingScreen> {
         Container(
           decoration : containerDecoration(false),
           child : Column(
-            children : delayedListOfStuff.map((delayedStuff) => CustomTile(titleContent : delayedStuff.stuffName, onDismissed : swipe, isDelay : true, isChecked : false)).toList(),
+            children : tmpDelayedListOfStuff.map((delayedStuff) => CustomTile(titleContent : delayedStuff.stuffName, onDismissed : swipe, isDelay : true, isChecked : false)).toList(),
           ),
         ),
       ],
@@ -289,7 +290,7 @@ class PackingScreenState extends State<PackingScreen> {
   }
 
   void pressCompeleteButton() {
-    if (widget.dataHandler.delayedListOfStuff.every((each) => each.whenIPackIt != null)){
+    if (widget.dataHandler.tmpDelayedListOfStuff.isEmpty) {
       Navigator.pop(context);
     } else {
       showAlarm();
@@ -319,7 +320,7 @@ class PackingScreenState extends State<PackingScreen> {
                   )
                 ),
                 const SizedBox(height : 7),
-                ...widget.dataHandler.delayedListOfStuff.map((each) => 
+                ...widget.dataHandler.tmpDelayedListOfStuff.map((each) => 
                   Text(
                     each.stuffName, 
                     style : const TextStyle(
@@ -656,14 +657,14 @@ class ListOfCategoryWrapper {
 }
 
 class TmpListWrapper {
-  static void delayToggle(String stuffName, List<String> tmpListOfStuff, List<DelayedStuff> delayedListOfStuff) {
+  static void delayToggle(String stuffName, List<String> tmpListOfStuff, List<DelayedStuff> tmpDelayedListOfStuff) {
     if (tmpListOfStuff.contains(stuffName)) {
       tmpListOfStuff.remove(stuffName);
-      delayedListOfStuff.add(DelayedStuff(stuffName : stuffName));
+      tmpDelayedListOfStuff.add(DelayedStuff(stuffName : stuffName));
     }
     else {
       tmpListOfStuff.add(stuffName);      
-      delayedListOfStuff.remove(delayedListOfStuff.firstWhere((each) => each.stuffName == stuffName, orElse : () => DelayedStuff(stuffName : "")));
+      tmpDelayedListOfStuff.remove(tmpDelayedListOfStuff.firstWhere((each) => each.stuffName == stuffName, orElse : () => DelayedStuff(stuffName : "")));
     }
   }
 
@@ -684,8 +685,10 @@ class DataHandler {
   List<Category> listOfCategory = [];
 
   List<String> tmpListOfStuff = [];
-  List<DelayedStuff> delayedListOfStuff = [];
+  List<DelayedStuff> tmpDelayedListOfStuff = [];
   List<String> tmpListOfCheckedStuff = [];
+
+  List<DelayedStuff> delayedListOfStuff = [];
   
   DataHandler () {
     listOfSet = ["회사", "본가", "친구", "자취방"];
@@ -757,7 +760,7 @@ class DataHandler {
   }
 
   void swipeTmpStuff(String stuffName) {
-    TmpListWrapper.delayToggle(stuffName, tmpListOfStuff, delayedListOfStuff);
+    TmpListWrapper.delayToggle(stuffName, tmpListOfStuff, tmpDelayedListOfStuff);
   }
 
   void newSet(String setName) {
