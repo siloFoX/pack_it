@@ -25,6 +25,7 @@ class PackingScreenState extends State<PackingScreen> {
   late final int numberOfStuffs;
   static const double spaceBetweenRow = 10;
   static const double spaceLeftAndRight = 10;
+  bool adScreenShow = true;
 
   @override
   void initState() {
@@ -37,48 +38,61 @@ class PackingScreenState extends State<PackingScreen> {
     return SafeArea(
       top : true,
       bottom : true,
-      child :Scaffold(
-        body : Center(
-          child : Container(
-            padding : const EdgeInsets.only(top : 20),
-            child : Column(
-              crossAxisAlignment : CrossAxisAlignment.stretch,
-              children : [
-                progressBar(widget.dataHandler.delayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length, numberOfStuffs),
-                Expanded(
-                  child : Container(
-                    margin : const EdgeInsets.symmetric(horizontal : spaceLeftAndRight),
-                    child : SingleChildScrollView(
-                      child : Column(            
-                        children : [
-                          renderStuff(widget.dataHandler.tmpListOfStuff),
-                          renderDelayedStuff(widget.dataHandler.delayedListOfStuff),
-                          renderCheckedStuff(widget.dataHandler.tmpListOfCheckedStuff),
-                        ],
+      child : Scaffold(
+        body : Stack(
+          children : [
+            Center(
+              child : Container(
+                padding : const EdgeInsets.only(top : 20),
+                child : Column(
+                  crossAxisAlignment : CrossAxisAlignment.stretch,
+                  children : [
+                    progressBar(widget.dataHandler.delayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length, numberOfStuffs),
+                    Expanded(
+                      child : Container(
+                        margin : const EdgeInsets.symmetric(horizontal : spaceLeftAndRight),
+                        child : SingleChildScrollView(
+                          child : Column(            
+                            children : [
+                              renderStuff(widget.dataHandler.tmpListOfStuff),
+                              renderDelayedStuff(widget.dataHandler.delayedListOfStuff),
+                              renderCheckedStuff(widget.dataHandler.tmpListOfCheckedStuff),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
 
-                // ad-banner
-                Container(
-                  height : 35.0,
-                  color : Colors.blue,
-                  child : const Center(
-                    child : Text(
-                      "Ad Banner",
-                      style : TextStyle(
-                        color : Colors.white,
+                    // ad-banner
+                    Container(
+                      height : 35.0,
+                      color : Colors.blue,
+                      child : const Center(
+                        child : Text(
+                          "Ad Banner",
+                          style : TextStyle(
+                            color : Colors.white,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
 
-                if (widget.dataHandler.delayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length == numberOfStuffs)
-                  renderCompeleteButton(),
-              ],
+                    if (widget.dataHandler.delayedListOfStuff.length + widget.dataHandler.tmpListOfCheckedStuff.length == numberOfStuffs)
+                      renderCompeleteButton(),
+                  ],
+                ),
+              ),
             ),
-          ),
+            if (adScreenShow)
+              Opacity(
+                opacity : 0.4,
+                child : Container(
+                  color : Colors.black,
+                ),
+              ),
+            if (adScreenShow)
+              renderAdScreen(context)
+          ],
         ),
       ),
     );
@@ -326,6 +340,72 @@ class PackingScreenState extends State<PackingScreen> {
           ],
         );
       },
+    );
+  }
+
+  Widget renderAdScreen(BuildContext context) {
+    final double widthSize = MediaQuery.of(context).size.width * 0.8;
+    final double heightSize = MediaQuery.of(context).size.height * 0.35;
+    return Center(
+      child : Column(
+        mainAxisAlignment : MainAxisAlignment.center,
+        children : [
+          Container(
+            width : widthSize,
+            child : Row(
+              children : [
+                Expanded(child : Container()),
+                GestureDetector(
+                  onTap : () {
+                    setState(() {
+                      adScreenShow = false;
+                    });
+                  },
+                  child : const Icon(
+                    Icons.close,
+                    size : 20.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            height : heightSize,
+            width : widthSize,
+            color : Colors.white,
+            child : const Center(
+              child : Text(
+                "광고",
+                style : TextStyle(
+                  color : Colors.black,
+                ),
+              ),
+            ),
+          ),
+          Container(
+            width : widthSize,
+            color : Colors.grey,
+            child : const Column(
+              children : [
+                Text(
+                  "Tip : 준비물을 왼쪽으로 밀어내면 나중에 챙기게 할 수 있어요.",
+                  style : TextStyle(
+                    fontSize : 10.0,
+                    color : Colors.white,
+                  ),
+                ),
+                Text(
+                  "Tip : 나중에 챙긴 준비물은 꼭 알람설정을 해두세요.",
+                  style : TextStyle(
+                    fontSize : 10.0,
+                    color : Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
