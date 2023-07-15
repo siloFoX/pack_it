@@ -20,11 +20,18 @@ final splashScreenTheme  = ThemeData(
   ),
 );
 
-const titleTheme = TextStyle(
-  color : Colors.black,
-  fontSize : 20.0,
-  fontWeight : FontWeight.w800,
-);
+extension CustomColor on ThemeData {
+  Color get malachite => const Color(0xff00cb08);
+  Color get mustard => const Color(0xfffed058);
+}
+
+extension TitleCustomTheme on TextTheme {
+  TextStyle get title => const TextStyle(
+    color : Colors.black,
+    fontSize : 20.0,
+    fontWeight : FontWeight.w800,
+  );
+}
 
 class SplashScreen extends StatelessWidget {
   @override
@@ -50,7 +57,7 @@ class SplashScreen extends StatelessWidget {
                           children : [
                             Container(
                               height : 7,
-                              color : const Color(0xfffed058), // 색상을 따로 빼야할 듯
+                              color : Theme.of(context).mustard,
                             ),
                           ],
                         ),
@@ -82,14 +89,14 @@ class SplashScreen extends StatelessWidget {
                 color : Colors.black,
               ),
               const SizedBox(height : 8.0),
-              const Icon(
+              Icon(
                 Icons.lock_outline,
                 size : 60.0,
-                color : Color(0xff00cb08),
+                color : Theme.of(context).malachite,
               ),
               Text(
                 "짐고",
-                style : titleTheme,
+                style : Theme.of(context).textTheme.title,
               ),
             ],
           ),
